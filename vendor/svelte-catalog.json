@@ -68,7 +68,7 @@
       "description": "A balanced heart with full lobes and a softened lower point.",
       "tags": ["love", "favorite"],
       "authorship": "Original geometry constructed for this project; no third-party icon paths used.",
-      "construction": "Broad, gently squared lobe shoulders and short upright sections carry the rounded rectangle grammar without losing the heart notch and soft point. Bounds x=3.25..20.75, y=4.1..19.9 are centered. Review study; not owner-approved. The upper lobes now curl inward more deeply toward the center notch at y=7; outer bounds and lower point remain unchanged.",
+      "construction": "The lower silhouette is a slim V with only a slight outward convex bow. Mirrored quadratic flanks depart subtly from straight diagonals and meet a compact rounded tip. Tangents align through the side transitions and tip without inward inflections. The established upper lobes and notch are retained. Outline bounds x=3.25..20.75, y=4.1..19.9 remain centered. Review study; not owner-approved.",
       "styles": ["outline", "filled"],
       "defaultStrokeWidth": 1.7,
       "filledDefaultStrokeWidth": null,
