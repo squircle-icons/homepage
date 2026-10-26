@@ -4,9 +4,9 @@ Validated locally on **2026-10-26**, macOS 26 / Apple Silicon, Node.js 24.19.0, 
 
 ## Homepage repository
 
-`pnpm verify` passed against the checked-in Svelte package artifact: provenance/SHA-256 verification, byte-identical catalog generation, zero Svelte errors or warnings, and a production build with three prerendered routes (`/`, `/icons`, `/docs`).
+`pnpm verify` passed against the checked-in Svelte package artifact: provenance/SHA-256 verification, byte-identical catalog generation, zero Svelte errors or warnings, and a production build with four prerendered routes (`/`, `/icons`, `/docs`, `/lab`).
 
-**Six browser tests passed:** two website scenarios in each of Chromium, Firefox, and WebKit. They exercise desktop navigation, 390/700-pixel layouts without horizontal overflow, and the landing playground's icon, color, stroke, code, folder, bell, and FAQ controls.
+**Twenty-four browser tests passed:** two website scenarios and six Folder lab scenarios in each of Chromium, Firefox, and WebKit. They exercise desktop navigation, 390/700-pixel layouts without horizontal overflow, and the landing playground's icon, color, stroke, code, folder, bell, and FAQ controls. Lab coverage includes paused-frame seeking, speed/presentation changes, A/B/C isolation, reset, keyboard scrubbing, reduced-motion preference changes, rapid operations, navigation cleanup, and missing-animation fallback. Lab desktop captures were visually inspected; these captures are review artifacts, not pixel-comparison baselines.
 
 The homepage imports actual package exports. It does not run the core or adapter test suites; those are independently owned by their repositories. See [core](https://github.com/squircle-icons/core/actions) for SVG/recipe validation and source tests, and [svelte](https://github.com/squircle-icons/svelte/actions) for deterministic components, types, bundle isolation, packed-consumer SSR/hydration, motion lifecycle, and visual regression checks.
 

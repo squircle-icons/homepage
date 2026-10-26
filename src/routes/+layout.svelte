@@ -3,6 +3,7 @@
   import { page } from '$app/state';
   import type { Snippet } from 'svelte';
   let { children }: { children: Snippet } = $props();
+  const isLab = $derived(page.url.pathname === '/lab');
 </script>
 
 <svelte:head
@@ -11,38 +12,48 @@
     content="An original icon library with considered curves, native Svelte components, and purposeful motion. First collection, in progress."
   /></svelte:head
 >
-<div class="site-shell">
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="Squircle Icons home"
-      ><span class="brand-symbol" aria-hidden="true"><span></span></span> squircle<span
-        class="brand-word">icons</span
-      ></a
-    >
-    <nav aria-label="Main navigation">
-      <a href="/" aria-current={page.url.pathname === '/' ? 'page' : undefined}>Overview</a><a
-        href="/icons"
-        aria-current={page.url.pathname === '/icons' ? 'page' : undefined}
-        >Icons <span class="nav-count">6</span></a
-      ><a href="/docs" aria-current={page.url.pathname === '/docs' ? 'page' : undefined}>Docs</a>
-    </nav>
-    <div class="header-end">
-      <span class="alpha-label">Alpha</span><a
-        href="https://github.com/squircle-icons/homepage"
-        target="_blank"
-        rel="noreferrer"
-        class="repo-link">GitHub <span aria-hidden="true">↗</span></a
+<div class="site-shell" class:lab-shell={isLab}>
+  {#if !isLab}
+    <header class="site-header">
+      <a class="brand" href="/" aria-label="Squircle Icons home"
+        ><span class="brand-symbol" aria-hidden="true"><span></span></span> squircle<span
+          class="brand-word">icons</span
+        ></a
       >
-    </div>
-  </header>
+      <nav aria-label="Main navigation">
+        <a href="/" aria-current={page.url.pathname === '/' ? 'page' : undefined}>Overview</a><a
+          href="/icons"
+          aria-current={page.url.pathname === '/icons' ? 'page' : undefined}
+          >Icons <span class="nav-count">6</span></a
+        ><a href="/docs" aria-current={page.url.pathname === '/docs' ? 'page' : undefined}>Docs</a>
+        <a href="/lab" aria-current={page.url.pathname === '/lab' ? 'page' : undefined}>Lab</a>
+      </nav>
+      <div class="header-end">
+        <span class="alpha-label">Alpha</span><a
+          href="https://github.com/squircle-icons/homepage"
+          target="_blank"
+          rel="noreferrer"
+          class="repo-link">GitHub <span aria-hidden="true">↗</span></a
+        >
+      </div>
+    </header>
+  {/if}
   <main>{@render children()}</main>
-  <footer>
-    <a class="footer-brand" href="/">Squircle Icons</a><span
-      >Drawn with intention. Built for Svelte.</span
-    ><span class="footer-note">Alpha stage · MIT license</span>
-  </footer>
+  {#if !isLab}
+    <footer>
+      <a class="footer-brand" href="/">Squircle Icons</a><span
+        >Drawn with intention. Built for Svelte.</span
+      ><span class="footer-note">Alpha stage · MIT license</span>
+    </footer>
+  {/if}
 </div>
 
 <style>
+  .site-shell.lab-shell {
+    max-width: 1320px;
+    min-width: 1000px;
+    padding: 28px 32px 48px;
+  }
   :global(*) {
     box-sizing: border-box;
   }
