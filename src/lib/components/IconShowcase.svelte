@@ -1,10 +1,10 @@
 <script lang="ts">
-  import Camera from 'squircle-icons-svelte/camera';
-  import Folder from 'squircle-icons-svelte/animated/folder';
-  import Bell from 'squircle-icons-svelte/animated/bell';
-  import Heart from 'squircle-icons-svelte/heart';
-  import Search from 'squircle-icons-svelte/search';
-  import Settings from 'squircle-icons-svelte/settings';
+  import Camera from '@squircle-icons/svelte/camera';
+  import Folder from '@squircle-icons/svelte/animated/folder';
+  import Bell from '@squircle-icons/svelte/animated/bell';
+  import Heart from '@squircle-icons/svelte/heart';
+  import Search from '@squircle-icons/svelte/search';
+  import Settings from '@squircle-icons/svelte/settings';
   let open = $state(false);
   let bell = $state<{ play(): void; reset(): void }>();
 </script>

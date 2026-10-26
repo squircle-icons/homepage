@@ -1,15 +1,15 @@
 // Generated from the pinned Svelte package catalog. Do not edit.
-import Bell from 'squircle-icons-svelte/bell';
-import Camera from 'squircle-icons-svelte/camera';
-import Folder from 'squircle-icons-svelte/folder';
-import Heart from 'squircle-icons-svelte/heart';
-import Search from 'squircle-icons-svelte/search';
-import Settings from 'squircle-icons-svelte/settings';
-import BellFilled from 'squircle-icons-svelte/filled/bell';
-import CameraFilled from 'squircle-icons-svelte/filled/camera';
-import FolderFilled from 'squircle-icons-svelte/filled/folder';
-import HeartFilled from 'squircle-icons-svelte/filled/heart';
-import SettingsFilled from 'squircle-icons-svelte/filled/settings';
+import Bell from '@squircle-icons/svelte/bell';
+import Camera from '@squircle-icons/svelte/camera';
+import Folder from '@squircle-icons/svelte/folder';
+import Heart from '@squircle-icons/svelte/heart';
+import Search from '@squircle-icons/svelte/search';
+import Settings from '@squircle-icons/svelte/settings';
+import BellFilled from '@squircle-icons/svelte/filled/bell';
+import CameraFilled from '@squircle-icons/svelte/filled/camera';
+import FolderFilled from '@squircle-icons/svelte/filled/folder';
+import HeartFilled from '@squircle-icons/svelte/filled/heart';
+import SettingsFilled from '@squircle-icons/svelte/filled/settings';
 export const catalog = [
   {
     ...{
@@ -18,19 +18,19 @@ export const catalog = [
       tags: ['notification', 'alert'],
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
-        'The integrated top hanger is shortened by 0.5 unit (from 2.3 to 1.8 units above its shoulder junction) so it reads as a compact nub. The full drawing is then translated upward by 0.25 unit to keep opposite vertical margins balanced: centerline bounds y=2.75..21.25, visible Regular bounds y=1.9..22.1. Straight walls, shoulders, lower lip and clapper proportions are retained. No doubled seams. Outline geometry retained; overall Bell review reopened for the Filled clapper correction.',
+        'The integrated top hanger is shortened by 0.5 unit (from 2.3 to 1.8 units above its shoulder junction) so it reads as a compact nub. The full drawing is then translated upward by 0.25 unit to keep opposite vertical margins balanced: centerline bounds y=2.75..21.25, visible Regular bounds y=1.9..22.1. Straight walls, shoulders, lower lip and clapper proportions are retained. No doubled seams. Owner-approved source; Outline geometry retained through the Filled clapper correction.',
       review: {
-        status: 'draft',
+        status: 'approved',
         reviewedBy: 'palamto',
         date: '2026-10-26',
         style: 'outline',
         preview: { x: 100, y: 100, strokeWidth: 1.7 },
-        note: 'Owner reopened Bell review after noticing the hollow-looking Filled clapper. The Filled clapper is now solid and awaits visual review; Outline geometry is unchanged.',
+        note: 'Owner approved Bell after the solid Filled clapper correction. Both styles reviewed at source proportions and Regular 1.70; the Filled clapper is a solid part with no U-shaped recess.',
       },
       styles: ['outline', 'filled'],
       defaultStrokeWidth: 1.7,
       filledDefaultStrokeWidth: null,
-      reviewStatus: 'draft',
+      reviewStatus: 'approved',
     },
     component: Bell,
     filledComponent: BellFilled,

@@ -1,8 +1,8 @@
 <script lang="ts">
   import { catalog } from '#lib/catalog.ts';
-  import Folder from 'squircle-icons-svelte/animated/folder';
-  import Bell from 'squircle-icons-svelte/animated/bell';
-  import Search from 'squircle-icons-svelte/search';
+  import Folder from '@squircle-icons/svelte/animated/folder';
+  import Bell from '@squircle-icons/svelte/animated/bell';
+  import Search from '@squircle-icons/svelte/search';
   let query = $state('');
   let size = $state(24);
   let color = $state('#27272a');
@@ -105,7 +105,7 @@
     <div class="aside-divider"></div>
     <h3>Use {selected}</h3>
     <pre><code
-        >{`import ${pascal(selected)} from\n'squircle-icons-svelte/${selected}';\n\n<${pascal(selected)}\n  size={${size}}\n  color="${color}"\n  strokeWidth={${strokeWidth}}\n/>`}</code
+        >{`import ${pascal(selected)} from\n'@squircle-icons/svelte/${selected}';\n\n<${pascal(selected)}\n  size={${size}}\n  color="${color}"\n  strokeWidth={${strokeWidth}}\n/>`}</code
       ></pre>
     <p class="aside-note">
       Decorative by default. Add a <code>label</code> when the icon carries meaning.

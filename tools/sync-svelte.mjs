@@ -9,7 +9,7 @@ const source = resolve(process.argv[2] ?? '../svelte');
 const run = (args, cwd = source) =>
   execFileSync('pnpm', args, { cwd, stdio: 'inherit', env: { ...process.env, CI: 'true' } });
 const manifest = JSON.parse(await readFile(resolve(source, 'package.json'), 'utf8'));
-assert.equal(manifest.name, 'squircle-icons-svelte', 'Unexpected source package');
+assert.equal(manifest.name, '@squircle-icons/svelte', 'Unexpected source package');
 assert.equal(
   execFileSync('git', ['status', '--porcelain'], { cwd: source, encoding: 'utf8' }).trim(),
   '',
@@ -42,7 +42,8 @@ await writeFile(
   ) + '\n',
 );
 const target = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
-target.dependencies['squircle-icons-svelte'] = `file:${artifact}`;
+delete target.dependencies['squircle-icons-svelte'];
+target.dependencies['@squircle-icons/svelte'] = `file:${artifact}`;
 await writeFile(resolve(root, 'package.json'), JSON.stringify(target, null, 2) + '\n');
 run(['install', '--force', '--no-frozen-lockfile'], root);
 run(['generate'], root);

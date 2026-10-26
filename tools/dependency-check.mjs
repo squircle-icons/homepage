@@ -14,7 +14,7 @@ const actual = createHash('sha256')
   .digest('hex');
 assert.equal(actual, lock.sha256, 'Dependency artifact changed without updating provenance');
 const installed = JSON.parse(
-  await readFile(fileURLToPath(import.meta.resolve('squircle-icons-svelte/catalog.json')), 'utf8'),
+  await readFile(fileURLToPath(import.meta.resolve('@squircle-icons/svelte/catalog.json')), 'utf8'),
 );
 const expected = JSON.parse(await readFile(new URL('vendor/svelte-catalog.json', root), 'utf8'));
 assert.deepEqual(installed, expected, 'Installed dependency differs from the recorded snapshot');

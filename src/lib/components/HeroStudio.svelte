@@ -1,7 +1,7 @@
 <script lang="ts">
   import { catalog } from '#lib/catalog.ts';
-  import Folder from 'squircle-icons-svelte/animated/folder';
-  import Bell from 'squircle-icons-svelte/animated/bell';
+  import Folder from '@squircle-icons/svelte/animated/folder';
+  import Bell from '@squircle-icons/svelte/animated/bell';
   let view = $state<'collection' | 'motion' | 'code'>('collection');
   let selected = $state('camera');
   let indigo = $state(false);
@@ -14,7 +14,7 @@
   const color = $derived(indigo ? '#4f46e5' : '#202024');
   const endScript = '</' + 'script>';
   const example = $derived(
-    `<script lang="ts">\n  import ${componentName} from\n    'squircle-icons-svelte/${selected}';\n${endScript}\n\n<${componentName}\n  size={24}\n  color="currentColor"\n  label="${componentName}"\n/>`,
+    `<script lang="ts">\n  import ${componentName} from\n    '@squircle-icons/svelte/${selected}';\n${endScript}\n\n<${componentName}\n  size={24}\n  color="currentColor"\n  label="${componentName}"\n/>`,
   );
 </script>
 
@@ -96,7 +96,7 @@
             <code
               ><span class="code-accent">import</span>
               {componentName} <span class="code-accent">from</span><br /><span class="code-string"
-                >'squircle-icons-svelte/{selected}'</span
+                >'@squircle-icons/svelte/{selected}'</span
               >;<br /><br />&lt;{componentName}<br />&nbsp; size=&#123;24&#125;<br />&nbsp;
               strokeWidth=&#123;{stroke}&#125;<br />/&gt;</code
             >

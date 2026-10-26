@@ -2,7 +2,7 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { format, resolveConfig } from 'prettier';
 const packageCatalog = JSON.parse(
-  await readFile(fileURLToPath(import.meta.resolve('squircle-icons-svelte/catalog.json')), 'utf8'),
+  await readFile(fileURLToPath(import.meta.resolve('@squircle-icons/svelte/catalog.json')), 'utf8'),
 );
 const icons: {
   name: string;
@@ -21,14 +21,14 @@ const destination = new URL('../src/lib/catalog.ts', import.meta.url);
 const content = await format(
   '// Generated from the pinned Svelte package catalog. Do not edit.\n' +
     icons
-      .map((icon) => `import ${pascal(icon.name)} from 'squircle-icons-svelte/${icon.name}';`)
+      .map((icon) => `import ${pascal(icon.name)} from '@squircle-icons/svelte/${icon.name}';`)
       .join('\n') +
     '\n' +
     icons
       .filter((icon) => icon.styles.includes('filled'))
       .map(
         (icon) =>
-          `import ${pascal(icon.name)}Filled from 'squircle-icons-svelte/filled/${icon.name}';`,
+          `import ${pascal(icon.name)}Filled from '@squircle-icons/svelte/filled/${icon.name}';`,
       )
       .join('\n') +
     '\nexport const catalog = [\n' +

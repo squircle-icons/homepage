@@ -1,8 +1,8 @@
 <script lang="ts">
   const examples = [
-    '# In the svelte repository:\npnpm install --frozen-lockfile\npnpm build\npnpm pack --pack-destination .artifacts\n\n# In your Svelte 5 application:\npnpm add /absolute/path/to/squircle-icons-svelte-0.0.0.tgz',
-    '<script lang="ts">\n  import Camera from \'squircle-icons-svelte/camera\';\n<\/script>\n\n<Camera size={24} color="currentColor" strokeWidth={1.70} />\n<Camera size={20} label="Camera" />',
-    "<script lang=\"ts\">\n  import Folder from 'squircle-icons-svelte/animated/folder';\n  import Bell from 'squircle-icons-svelte/animated/bell';\n  let open = $state(false);\n  let bell: { play(): void; reset(): void };\n<\/script>\n\n<button onclick={() => open = !open} aria-expanded={open}>\n  <Folder {open} /> Files\n</button>\n<button onclick={() => bell.play()}>\n  <Bell bind:this={bell} /> Preview notification\n</button>",
+    'npm install @squircle-icons/svelte@alpha\n\n# Or with pnpm:\npnpm add @squircle-icons/svelte@alpha',
+    '<script lang="ts">\n  import Camera from \'@squircle-icons/svelte/camera\';\n<\/script>\n\n<Camera size={24} color="currentColor" strokeWidth={1.70} />\n<Camera size={20} label="Camera" />',
+    "<script lang=\"ts\">\n  import Folder from '@squircle-icons/svelte/animated/folder';\n  import Bell from '@squircle-icons/svelte/animated/bell';\n  let open = $state(false);\n  let bell: { play(): void; reset(): void };\n<\/script>\n\n<button onclick={() => open = !open} aria-expanded={open}>\n  <Folder {open} /> Files\n</button>\n<button onclick={() => bell.play()}>\n  <Bell bind:this={bell} /> Preview notification\n</button>",
     '<!-- The button already has a name; the icon is decorative. -->\n<button aria-label="Take a photo"><Camera /></button>\n\n<!-- The icon itself conveys meaning. -->\n<Camera label="Camera available" />',
     '# Run in each repository:\npnpm verify\n\n# In svelte, after committing a core change:\npnpm sync:core ../core\n\n# In homepage, after committing an adapter change:\npnpm sync:svelte ../svelte',
   ];
@@ -28,16 +28,16 @@
   <div class="docs-content">
     <section id="installation">
       <span class="section-number mono">01 / GETTING STARTED</span>
-      <h2>Start with the local package.</h2>
+      <h2>Install the Svelte alpha.</h2>
       <p>
-        This collection is an alpha-stage design preview. It has not been published to npm. Build
-        the local package from the Svelte repository. Use Node.js 22.17+ and pnpm 10.10.0; the
-        checked toolchain uses Node.js 24.
+        Install the alpha package in a Svelte 5.57.1+ application. Six Outline icons and five Filled
+        variants are included. The package requires Node.js 22.17+; the checked toolchain uses
+        Node.js 24.
       </p>
       <pre><code>{examples[0]}</code></pre>
       <p class="callout">
-        The package name is provisional. Original artwork, motion recipes, and code are licensed
-        under MIT. Third-party assets retain their own licenses.
+        Alpha APIs and artwork may change before a stable release. Original artwork, motion recipes,
+        and code are licensed under MIT. Animated Folder/Bell exports remain experimental.
       </p>
     </section>
     <section id="static">
@@ -50,12 +50,12 @@
       <pre><code>{examples[1]}</code></pre>
       <p>
         You can also use named static exports: <code
-          >import &#123; Camera &#125; from 'squircle-icons-svelte'</code
+          >import &#123; Camera &#125; from '@squircle-icons/svelte'</code
         >. A production bundle check verifies that unused icons are removed.
       </p>
       <p>
         Five icons have a Filled entry point, such as <code
-          >import Camera from 'squircle-icons-svelte/filled/camera'</code
+          >import Camera from '@squircle-icons/svelte/filled/camera'</code
         >. Search is Outline only by design. These are separate solid drawings. Only Filled Folder
         uses <code>strokeWidth</code> to adjust its internal gap; the other Filled variants have fixed
         geometry.

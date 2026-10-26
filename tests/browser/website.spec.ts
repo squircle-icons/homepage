@@ -102,7 +102,7 @@ test('landing playground responds to icon, color, motion, and code controls', as
   });
   await expect(studio.locator('.icon-canvas svg')).toHaveAttribute('stroke-width', '2');
   await studio.getByRole('button', { name: 'In your app', exact: true }).click();
-  await expect(studio.locator('pre')).toContainText('squircle-icons-svelte/heart');
+  await expect(studio.locator('pre')).toContainText('@squircle-icons/svelte/heart');
   await studio.getByRole('button', { name: 'In motion', exact: true }).click();
   await studio.getByRole('button', { name: 'Toggle playground folder' }).click();
   await expect(studio.getByRole('button', { name: 'Toggle playground folder' })).toHaveAttribute(

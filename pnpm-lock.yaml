@@ -11,9 +11,9 @@ importers:
       '@fontsource-variable/dm-sans':
         specifier: 5.3.0
         version: 5.3.0
-      squircle-icons-svelte:
-        specifier: file:vendor/squircle-icons-svelte-0.0.0.tgz
-        version: file:vendor/squircle-icons-svelte-0.0.0.tgz(svelte@5.57.2)
+      '@squircle-icons/svelte':
+        specifier: file:vendor/squircle-icons-svelte-0.1.0-alpha.0.tgz
+        version: file:vendor/squircle-icons-svelte-0.1.0-alpha.0.tgz(svelte@5.57.2)
     devDependencies:
       '@playwright/test':
         specifier: 1.64.1
@@ -333,6 +333,13 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
+  '@squircle-icons/svelte@file:vendor/squircle-icons-svelte-0.1.0-alpha.0.tgz':
+    resolution: {integrity: sha512-aRE/PLNPvliYbgM8GkHDPY9d88s7IiAs/cDLPiUAZl2/Lv4FimnuU86E67dseqs/qrgrHv2M6ZXdnv1z7XntbA==, tarball: file:vendor/squircle-icons-svelte-0.1.0-alpha.0.tgz}
+    version: 0.1.0-alpha.0
+    engines: {node: '>=22.17.0'}
+    peerDependencies:
+      svelte: ^5.57.1
+
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
@@ -598,13 +605,6 @@ packages:
     resolution: {integrity: sha512-KGj/8Y43x35aZVDtt+J4mK1hoLGHULMYfSkODJNQjNDC3oW1PqPoxMwo0pLUsWM/UEGzON/NxeHywEfNXNP3Vw==}
     engines: {node: '>=0.10.0'}
 
-  squircle-icons-svelte@file:vendor/squircle-icons-svelte-0.0.0.tgz:
-    resolution: {integrity: sha512-y50B+JCujPY6mIneBvPz6qE7ZIeU0XcLcr2H21ETAyoTGO8Vd55PUJfbQrpQgGVFyNOulqUFy/TBuQCn+3eUww==, tarball: file:vendor/squircle-icons-svelte-0.0.0.tgz}
-    version: 0.0.0
-    engines: {node: '>=22.17.0'}
-    peerDependencies:
-      svelte: ^5.57.1
-
   svelte-check@4.7.7:
     resolution: {integrity: sha512-Ge2IMdeTpbJuzNFGRiiMg0RWgbScysKQu7xwcyFJ22+DU9F5nPX51+Q3gHmGqRxYQMx2knreVWt5oCtfe0vf2g==}
     engines: {node: '>= 18.0.0'}
@@ -848,6 +848,10 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
+  '@squircle-icons/svelte@file:vendor/squircle-icons-svelte-0.1.0-alpha.0.tgz(svelte@5.57.2)':
+    dependencies:
+      svelte: 5.57.2
+
   '@standard-schema/spec@1.1.0': {}
 
   '@sveltejs/acorn-typescript@1.0.13(acorn@8.19.0)':
@@ -1081,10 +1085,6 @@ snapshots:
       totalist: 3.0.1
 
   source-map-js@1.2.2: {}
-
-  squircle-icons-svelte@file:vendor/squircle-icons-svelte-0.0.0.tgz(svelte@5.57.2):
-    dependencies:
-      svelte: 5.57.2
 
   svelte-check@4.7.7(picomatch@4.0.7)(svelte@5.57.2)(typescript@6.0.3):
     dependencies:

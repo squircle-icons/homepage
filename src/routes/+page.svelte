@@ -1,10 +1,10 @@
 <script lang="ts">
   import HeroStudio from '#lib/components/HeroStudio.svelte';
   import IconShowcase from '#lib/components/IconShowcase.svelte';
-  import Camera from 'squircle-icons-svelte/camera';
-  import Heart from 'squircle-icons-svelte/heart';
-  import Folder from 'squircle-icons-svelte/animated/folder';
-  import Bell from 'squircle-icons-svelte/animated/bell';
+  import Camera from '@squircle-icons/svelte/camera';
+  import Heart from '@squircle-icons/svelte/heart';
+  import Folder from '@squircle-icons/svelte/animated/folder';
+  import Bell from '@squircle-icons/svelte/animated/bell';
   import { catalog } from '#lib/catalog.ts';
   let open = $state(false);
   let bell = $state<{ play(): void; reset(): void }>();
@@ -18,7 +18,7 @@
     {
       title: 'Can I use these in a project today?',
       answer:
-        'You can build and install the local Svelte package for evaluation. This is an alpha: the artwork, API, and package name can change. The original artwork and code are available under the MIT license.',
+        'Install @squircle-icons/svelte@alpha in a Svelte 5 project. This is an alpha: the artwork and API can change. The original artwork and code are available under the MIT license.',
     },
     {
       title: 'Do animated icons always move?',
@@ -161,7 +161,7 @@
         <pre><code
             ><span class="syntax-keyword">import</span> Camera <span class="syntax-keyword"
               >from</span
-            ><br /><span class="syntax-string">'squircle-icons-svelte/camera'</span>;<br /><br
+            ><br /><span class="syntax-string">'@squircle-icons/svelte/camera'</span>;<br /><br
             />&lt;Camera<br />&nbsp; size=&#123;<span class="syntax-value">24</span>&#125;<br
             />&nbsp; color=<span class="syntax-string">"currentColor"</span><br />&nbsp; label=<span
               class="syntax-string">"Camera"</span
