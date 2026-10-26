@@ -16,7 +16,7 @@ The homepage imports actual package exports. It does not run the core or adapter
 
 The pre-split white/black/indigo landing and gallery were inspected at desktop size, the landing at mobile size, all six original icons at 16/20/24/48 pixels, and folder closed/open plus paused bell motion. Captures retained in `design/previews/` document that review; browser-specific icon geometry baselines now belong to the Svelte repository.
 
-Owner-approved artwork includes Folder, Camera, Heart and Settings in Outline/Filled, plus Search in Outline only. Search has no Filled source, export, tarball entry or Lab option. Bell remains Needs review.
+Owner-approved artwork includes Folder, Camera, Heart and Settings in Outline/Filled, plus Search in Outline only. Search has no Filled source, export, tarball entry or Lab option. Bell review is reopened for the solid Filled clapper correction.
 
 Heart retains the established upper lobes. Its lower silhouette is a slim V with a very slight outward convex bow and a compact rounded tip. Tangents remain continuous and outer bounds are unchanged. Outline and Filled were inspected at 16/20/24/48px and in the Lab at 11×. The owner approved both Heart styles after the head alignment and grid correction. The reviewed local X/Y=95% settings are recorded in source metadata; that preview sizing has not been baked into geometry.
 
@@ -30,9 +30,13 @@ Filled Settings now uses the visible exterior of the unchanged Regular (1.70) Ou
 
 ## Matching-edge rule, Settings approval and compact Bell
 
-Owner direction now requires new and revised dual-style drawings to match their visible outer edges at native 100% and Regular 1.70, including shape, dimensions, placement and corresponding openings. Core design/contribution rules, adapter contribution rules and the Lab review checklist record that requirement. Settings Outline/Filled are approved; only Bell remains pending.
+Owner direction now requires new and revised dual-style drawings to match their visible outer edges at native 100% and Regular 1.70, including shape, dimensions, placement and corresponding openings. Core design/contribution rules, adapter contribution rules and the Lab review checklist record that requirement. Settings Outline/Filled are approved; Bell was initially approved, then review was reopened for its Filled clapper correction.
 
 Bell's integrated hanger is 0.5 unit shorter. The entire drawing moves upward 0.25 unit to balance its visible vertical bounds at y=1.9..22.1. Its Filled body and round-ended clapper are derived from the visible Regular Outline contours, preserving body/clapper separation. SVG validation, 29 core unit tests, 4 adapter unit tests, types, packed-consumer checks, bundle isolation and deterministic generation passed. Complete Bell/Settings contour comparisons at 0°/30°/75° passed across Chromium, Firefox and WebKit. All 45 adapter browser cases passed, and static/filled contact sheets and the existing motion-pose baselines were refreshed for the geometry change. No motion timing or controller behavior changed. Homepage verification passed with zero Svelte errors/warnings, production build and all 48 browser cases. Live Outline/Filled review at 100% / Regular 1.70 and zoom 11× reports identical 17.83 × 20.20 unit bounds and paired 3.085 horizontal / 1.900 vertical margins.
+
+## Solid Filled Bell clapper correction
+
+The owner reopened Bell approval after spotting the U-shaped clapper recess. The Filled clapper is now a solid rounded half-disc with a straight closed top and the same lower exterior and separation from the body. Outline geometry is unchanged. The regression reference closes the Outline clapper for the Filled silhouette and explicitly checks that (12,20) lies inside the solid part while (12,19) remains in the body/clapper gap. This is intentional Filled interior treatment, consistent with the solid bell body. The corrected source passed 29 core tests, 4 adapter unit tests, packed-consumer checks, deterministic generation, types, bundle isolation, all 45 adapter browser cases and all 48 homepage browser cases. Svelte checks reported zero errors/warnings and both production builds passed. Updated Filled contact-sheet baselines and a live Lab capture show the solid part. Bell remains pending owner review; release preparation stays pending that review.
 
 ## Limits
 
