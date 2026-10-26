@@ -1,53 +1,24 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
   import Folder from 'squircle-icons-svelte/folder';
-  import AnimatedFolder from 'squircle-icons-svelte/animated/folder';
-  import FolderStudy from '#lib/components/FolderStudy.svelte';
-
-  const variants = [
-    {
-      letter: 'A',
-      name: 'Considered',
-      duration: 220,
-      easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
-      note: 'The current library motion. A quick response with a soft landing.',
-    },
-    {
-      letter: 'B',
-      name: 'Unhurried',
-      duration: 280,
-      easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
-      note: 'A slower departure and a little more time to notice the gesture.',
-    },
-    {
-      letter: 'C',
-      name: 'Decisive',
-      duration: 160,
-      easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      note: 'A short, immediate gesture that settles early.',
-    },
-  ];
-  let selected = $state(0);
+  import StaticFolderPreview, { type Margins } from '#lib/components/StaticFolderPreview.svelte';
+  let kind = $state<'outline' | 'filled'>('outline');
   let surface = $state<'light' | 'dark'>('light');
   let ink = $state<'ink' | 'indigo'>('ink');
   let grid = $state(true);
+  let guides = $state(true);
   let stroke = $state(1.75);
-  let speed = $state(1);
-  let forceReduced = $state(false);
-  let systemReduced = $state(false);
-  let supported = $state(true);
-  let mounted = $state(true);
-  let hover = $state(false);
-  let controlled = $state(false);
+  let sizeX = $state(100);
+  let sizeY = $state(100);
+  let linked = $state(false);
   let checked = $state<string[]>([]);
-  let study = $state<FolderStudy>();
-  let comparisons = $state<FolderStudy[]>([]);
-  let liveIcons = $state<{ reset(): void }[]>([]);
-  let mainHost: HTMLDivElement;
-  let timeline = $state(0);
-  let phase = $state('Closed');
-  const variant = $derived(variants[selected]);
-  const reduced = $derived(forceReduced || systemReduced);
+  let margins = $state<Margins>({
+    left: 2.125,
+    right: 2.125,
+    top: 4.125,
+    bottom: 4.125,
+    width: 19.75,
+    height: 15.75,
+  });
   const color = $derived(
     ink === 'indigo'
       ? surface === 'dark'
@@ -57,49 +28,42 @@
         ? '#f4f4f5'
         : '#27272a',
   );
-
-  onMount(() => {
-    supported = typeof Element.prototype.animate === 'function';
-    const media = matchMedia('(prefers-reduced-motion: reduce)');
-    systemReduced = media.matches;
-    const change = () => {
-      systemReduced = media.matches;
-    };
-    media.addEventListener('change', change);
-    // Observe the lab component's readout without polling or a perpetual frame loop.
-    const observer = new MutationObserver(() => {
-      const element = mainHost.querySelector('[data-progress]');
-      timeline = Number(element?.getAttribute('data-progress') ?? 0);
-      phase = element?.getAttribute('data-status') ?? 'Closed';
-    });
-    observer.observe(mainHost, {
-      attributes: true,
-      subtree: true,
-      attributeFilter: ['data-progress', 'data-status'],
-    });
-    return () => {
-      media.removeEventListener('change', change);
-      observer.disconnect();
-    };
-  });
-
-  async function resetAll() {
-    await Promise.all([study?.reset(), ...comparisons.map((item) => item?.reset())]);
-    controlled = false;
-    hover = false;
-    await tick();
-    liveIcons.forEach((icon) => icon?.reset());
+  const clamp = (value: number) =>
+    Math.min(115, Math.max(50, Number.isFinite(value) ? value : 100));
+  function resize(axis: 'x' | 'y', value: number) {
+    const next = clamp(value);
+    if (linked) {
+      const requested = next / (axis === 'x' ? sizeX : sizeY);
+      const ratio = Math.min(
+        Math.min(115 / sizeX, 115 / sizeY),
+        Math.max(Math.max(50 / sizeX, 50 / sizeY), requested),
+      );
+      sizeX = Math.round(sizeX * ratio * 100) / 100;
+      sizeY = Math.round(sizeY * ratio * 100) / 100;
+      return;
+    }
+    if (axis === 'x') sizeX = next;
+    else sizeY = next;
   }
-  function selectVariant(index: number) {
-    void study?.reset();
-    selected = index;
+  function reset() {
+    sizeX = sizeY = 100;
+    stroke = 1.75;
+    linked = false;
   }
+  function measure(value: Margins) {
+    margins = value;
+  }
+  const balanced = $derived(
+    Math.abs(margins.left - margins.right) < 0.001 &&
+      Math.abs(margins.top - margins.bottom) < 0.001 &&
+      [margins.left, margins.right, margins.top, margins.bottom].every((value) => value >= 0),
+  );
 </script>
 
 <svelte:head
   ><title>Folder Lab — Squircle Icons</title><meta
     name="description"
-    content="A hands-on workbench for reviewing Squircle Folder geometry, animation timing, and real component behavior."
+    content="A static icon workbench for outline and filled Folder designs, stroke weight, X/Y sizing and balanced spacing."
   /></svelte:head
 >
 
@@ -107,271 +71,246 @@
   <h1>Folder <span>lab</span></h1>
   <a href="/icons" aria-label="Back to icons">Back to icons <span aria-hidden="true">↗</span></a>
 </section>
-
 <div class="workbench" data-testid="folder-lab">
-  <aside class="controls" aria-label="Study settings">
-    <div class="panel-title">Settings</div>
+  <aside class="controls" aria-label="Icon settings">
+    <div class="panel-title">Settings <span>Static study</span></div>
     <label class="field-label" for="lab-icon">Icon</label>
     <div class="icon-select">
       <Folder size={20} /><select id="lab-icon"
-        ><option value="folder">Folder</option><option disabled>Bell — coming next</option><option
+        ><option value="folder">Folder</option><option disabled>Bell — later study</option><option
           disabled>Camera — later study</option
         ><option disabled>Heart — later study</option><option disabled>Search — later study</option
         ><option disabled>Settings — later study</option></select
       >
     </div>
-
+    <fieldset class="setting">
+      <legend class="field-label">Style</legend>
+      <div class="segmented">
+        <button aria-pressed={kind === 'outline'} onclick={() => (kind = 'outline')}>Outline</button
+        ><button aria-pressed={kind === 'filled'} onclick={() => (kind = 'filled')}>Filled</button>
+      </div>
+    </fieldset>
     <div class="setting">
-      <span class="field-label">Surface</span>
-      <div class="segmented" aria-label="Preview surface">
+      <label class="field-label range-label" for="lab-stroke"
+        >Stroke width <output>{kind === 'outline' ? stroke.toFixed(2) : '—'}</output></label
+      >
+      <div class="stroke-control">
+        <button
+          class="small-button"
+          aria-label="Decrease stroke width"
+          disabled={kind === 'filled' || stroke <= 1}
+          onclick={() => (stroke = Math.max(1, +(stroke - 0.25).toFixed(2)))}>−</button
+        ><input
+          id="lab-stroke"
+          type="range"
+          min="1"
+          max="2.5"
+          step="0.05"
+          bind:value={stroke}
+          disabled={kind === 'filled'}
+        /><button
+          class="small-button"
+          aria-label="Increase stroke width"
+          disabled={kind === 'filled' || stroke >= 2.5}
+          onclick={() => (stroke = Math.min(2.5, +(stroke + 0.25).toFixed(2)))}>+</button
+        >
+      </div>
+      <p class="hint">
+        {kind === 'filled'
+          ? 'Filled uses solid geometry with no stroke.'
+          : 'Weight stays constant while resizing X/Y.'}
+      </p>
+    </div>
+    <div class="size-section">
+      <div class="size-heading">
+        <span class="field-label">Shape size</span><span class="unit">%</span>
+      </div>
+      {#each [{ axis: 'x' as const, name: 'Size X', value: sizeX }, { axis: 'y' as const, name: 'Size Y', value: sizeY }] as item}<div
+          class="axis-control"
+        >
+          <label for={'lab-size-' + item.axis}>{item.axis.toUpperCase()}</label><button
+            class="small-button"
+            aria-label={'Decrease size ' + item.axis.toUpperCase()}
+            onclick={() => resize(item.axis, item.value - 5)}
+            disabled={item.value <= 50}>−</button
+          ><input
+            id={'lab-size-' + item.axis}
+            type="number"
+            aria-label={item.name}
+            min="50"
+            max="115"
+            step="0.01"
+            value={item.value}
+            onchange={(event) => resize(item.axis, Number(event.currentTarget.value))}
+          /><button
+            class="small-button"
+            aria-label={'Increase size ' + item.axis.toUpperCase()}
+            onclick={() => resize(item.axis, item.value + 5)}
+            disabled={item.value >= 115}>+</button
+          >
+        </div>{/each}
+      <label class="checkbox-row"
+        ><input type="checkbox" bind:checked={linked} /> Link X/Y proportions</label
+      >
+      <p class="hint">Centered on the 24×24 grid. 100% is the source size.</p>
+    </div>
+    <fieldset class="setting">
+      <legend class="field-label">Surface</legend>
+      <div class="segmented">
         <button aria-pressed={surface === 'light'} onclick={() => (surface = 'light')}>Light</button
         ><button aria-pressed={surface === 'dark'} onclick={() => (surface = 'dark')}>Dark</button>
       </div>
-    </div>
-    <div class="setting">
-      <span class="field-label">Stroke color</span>
+    </fieldset>
+    <fieldset class="setting">
+      <legend class="field-label">Color</legend>
       <div class="ink-options">
         <button
           class="swatch ink"
-          aria-label="Ink stroke"
+          aria-label="Ink color"
           aria-pressed={ink === 'ink'}
           onclick={() => (ink = 'ink')}
         ></button><button
           class="swatch indigo"
-          aria-label="Indigo stroke"
+          aria-label="Indigo color"
           aria-pressed={ink === 'indigo'}
           onclick={() => (ink = 'indigo')}
         ></button><span>{ink === 'ink' ? 'Ink' : 'Indigo'}</span>
       </div>
-    </div>
-    <div class="setting">
-      <label class="field-label range-label" for="lab-stroke"
-        >Stroke width <output>{stroke.toFixed(2)}</output></label
-      ><input id="lab-stroke" type="range" min="1" max="2.5" step="0.05" bind:value={stroke} />
-      <div class="range-ends mono"><span>1.00</span><span>2.50</span></div>
-    </div>
-    <div class="setting">
-      <label class="field-label" for="lab-speed">Playback speed</label><select
-        id="lab-speed"
-        bind:value={speed}
-        ><option value={1}>1× · Real time</option><option value={0.5}>0.5× · Slow</option><option
-          value={0.25}>0.25× · Frame study</option
-        ></select
-      >
-    </div>
+    </fieldset>
     <label class="switch-row"
       ><span>Drawing grid</span><input type="checkbox" bind:checked={grid} /></label
+    ><label class="switch-row"
+      ><span>Spacing guides</span><input type="checkbox" bind:checked={guides} /></label
     >
-    <label class="switch-row"
-      ><span>Reduce motion</span><input type="checkbox" bind:checked={forceReduced} /></label
+    <button class="reset-button" onclick={reset}
+      >Reset geometry <span aria-hidden="true">↺</span></button
     >
-    <p class="hint preference">
-      {systemReduced
-        ? 'Your system requests reduced motion.'
-        : 'System preference is respected automatically.'}
-    </p>
   </aside>
-
-  <section class="canvas-panel" aria-label="Folder motion workbench">
+  <section class="canvas-panel" aria-label="Static Folder workbench">
     <div class="canvas-topline">
-      <span><b>folder</b><span class="muted">.svelte</span></span><span class="mono"
-        >24 × 24 / {variant.letter}</span
+      <span><b>folder</b><span class="muted"> / {kind}</span></span><span class="mono"
+        >24 × 24 · 7× PREVIEW</span
       >
     </div>
-    <div class:dark={surface === 'dark'} class="canvas" style:color>
-      <div class="drawing" class:gridded={grid}>
+    <div class="canvas" class:dark={surface === 'dark'} style:color>
+      <div class="drawing" class:gridded={grid} class:guided={guides}>
         <span class="axis horizontal" aria-hidden="true"></span><span
           class="axis vertical"
           aria-hidden="true"
         ></span>
-        <div bind:this={mainHost} data-testid="main-study">
-          <FolderStudy
-            bind:this={study}
-            duration={variant.duration}
-            easing={variant.easing}
-            {speed}
-            {reduced}
+        <div data-testid="main-study">
+          <StaticFolderPreview
+            {kind}
+            x={sizeX}
+            y={sizeY}
             {color}
             strokeWidth={stroke}
-            name="Folder motion preview"
+            label={'Folder ' + kind + ' preview'}
+            onmeasure={measure}
           />
         </div>
-        <span class="grid-number mono">24</span>
+        {#if guides}<span class="spacing top mono" data-testid="spacing-top"
+            >{margins.top.toFixed(3)}</span
+          ><span class="spacing bottom mono" data-testid="spacing-bottom"
+            >{margins.bottom.toFixed(3)}</span
+          ><span class="spacing left mono" data-testid="spacing-left"
+            >{margins.left.toFixed(3)}</span
+          ><span class="spacing right mono" data-testid="spacing-right"
+            >{margins.right.toFixed(3)}</span
+          >{/if}
       </div>
-      <div class="state-caption" aria-live="polite">
-        <span class="state-dot"></span>{phase}<span class="mono"
-          >{variant.duration} ms · {speed}×</span
+      <div class="canvas-status">
+        <span class="status-dot"></span>{kind === 'outline' ? 'Outline' : 'Filled'}<span
+          >{margins.width.toFixed(2)} × {margins.height.toFixed(2)} units</span
         >
       </div>
     </div>
-    <div class="transport">
-      {#if !supported}<p class="motion-notice">
-          Animation playback is unavailable in this browser. Open and Closed states are still
-          available.
-        </p>{/if}
-      <div class="transport-buttons">
-        <button
-          class="play-button"
-          onclick={() => void study?.play()}
-          disabled={reduced || !supported}><span aria-hidden="true">▶</span> Play</button
-        ><button onclick={() => study?.pause()} disabled={reduced || !supported}>Pause</button
-        ><button onclick={() => void study?.reset()}>Reset</button>
-        <div class="state-buttons" aria-label="Folder state">
-          <button onclick={() => void study?.setOpen(false)}>Closed</button><button
-            onclick={() => void study?.setOpen(true)}>Open</button
+    <div class="spacing-panel">
+      <div class="spacing-title">
+        <span>Visible spacing</span><span
+          class:balanced
+          class="balance-state"
+          data-testid="balance-state"
+          >{balanced ? 'Opposite sides balanced' : 'Review alignment'}</span
+        >
+      </div>
+      <div class="spacing-values">
+        <div>
+          <span>Left / Right</span><output data-testid="horizontal-spacing"
+            >{margins.left.toFixed(3)} / {margins.right.toFixed(3)}</output
+          >
+        </div>
+        <div>
+          <span>Top / Bottom</span><output data-testid="vertical-spacing"
+            >{margins.top.toFixed(3)} / {margins.bottom.toFixed(3)}</output
           >
         </div>
       </div>
-      <div class="timeline-label">
-        <label for="lab-timeline">Opening timeline</label><output
-          class="mono"
-          for="lab-timeline"
-          data-testid="timeline-value">{timeline}%</output
-        >
-      </div>
-      <input
-        id="lab-timeline"
-        aria-describedby="timeline-help"
-        type="range"
-        min="0"
-        max="100"
-        step="1"
-        value={timeline}
-        disabled={reduced || !supported}
-        oninput={(event) => void study?.seek(Number(event.currentTarget.value))}
-      />
-      <div class="range-ends mono"><span>0% · CLOSED</span><span>100% · OPEN</span></div>
-      <p class="hint" id="timeline-help">
-        {reduced
-          ? 'Motion is reduced. Use Open and Closed to inspect the resting states.'
-          : 'Scrub to pause at any point in the opening gesture. Play resumes from that frame.'}
+      <p class="hint">
+        Measured to the visible edge, including the outline stroke. X/Y changes are local previews.
       </p>
     </div>
   </section>
 </div>
-
 <section
   class="optical-row"
   aria-label="Folder optical sizes"
-  style:color
   class:dark={surface === 'dark'}
+  style:color
 >
-  <div class="optical-title">Actual size</div>
+  <span class="optical-title">Actual size</span>
   <div class="sizes">
     {#each [16, 20, 24, 48] as size}<div class="size-sample">
-        <div><Folder {size} strokeWidth={stroke} /></div>
+        <div><StaticFolderPreview {kind} {size} x={sizeX} y={sizeY} strokeWidth={stroke} /></div>
         <span class="mono">{size}px</span>
       </div>{/each}
   </div>
-  <div class="endpoints">
-    <div><Folder size={40} strokeWidth={stroke} /><span class="mono">CLOSED</span></div>
-    <div>
-      <AnimatedFolder size={40} open reducedMotion="always" strokeWidth={stroke} /><span
-        class="mono">OPEN</span
-      >
-    </div>
-  </div>
+  <span class="optical-note">{kind} · {sizeX}% × {sizeY}%</span>
 </section>
-
-<section class="comparison-section" aria-labelledby="compare-heading">
-  <div class="section-head">
-    <div>
-      <h2 id="compare-heading">Compare motion</h2>
-    </div>
-    <button
-      class="button"
-      onclick={() => comparisons.forEach((item) => void item.play())}
-      disabled={reduced || !supported}>Play all <span aria-hidden="true">↗</span></button
-    >
+<section class="comparison-section" aria-labelledby="style-heading">
+  <div class="section-heading">
+    <h2 id="style-heading">Compare styles</h2>
+    <span>Same scale and X/Y settings</span>
   </div>
   <div class="comparison-grid">
-    {#each variants as item, index}<article
-        class:selected={selected === index}
-        data-testid={'variant-' + item.letter}
+    {#each ['outline', 'filled'] as style}<article
+        data-testid={'style-' + style}
+        class:selected={kind === style}
       >
         <div class="comparison-heading">
-          <span class="letter mono">{item.letter}</span><span class="mono">{item.duration} ms</span
-          >{#if index === 0}<span class="current-label">Library default</span>{:else}<span
-              class="current-label">Experiment</span
-            >{/if}
+          <h3>{style === 'outline' ? 'Outline' : 'Filled'}</h3>
+          <span>{style === 'outline' ? 'Adjustable stroke' : 'Solid geometry'}</span>
         </div>
         <div class="comparison-preview">
-          <FolderStudy
-            bind:this={comparisons[index]}
-            duration={item.duration}
-            easing={item.easing}
-            {speed}
-            {reduced}
+          <StaticFolderPreview
+            kind={style as 'outline' | 'filled'}
             size={72}
-            strokeWidth={stroke}
+            x={sizeX}
+            y={sizeY}
             color="#4f46e5"
-            name={'Folder study ' + item.letter}
+            strokeWidth={stroke}
+            label={'Compare ' + style + ' Folder'}
           />
         </div>
-        <h3>{item.name}</h3>
-
-        <div class="comparison-actions">
-          <button
-            onclick={() => void comparisons[index]?.play()}
-            disabled={reduced || !supported}
-            aria-label={'Play study ' + item.letter}>▶ Preview</button
-          ><button aria-pressed={selected === index} onclick={() => selectVariant(index)}
-            >{selected === index ? 'Selected' : 'Use study'}<span aria-hidden="true"
-              >{selected === index ? '✓' : '↗'}</span
-            ></button
-          >
-        </div>
+        <button aria-pressed={kind === style} onclick={() => (kind = style as 'outline' | 'filled')}
+          >{kind === style ? 'Selected' : 'Use style'}<span aria-hidden="true"
+            >{kind === style ? '✓' : '↗'}</span
+          ></button
+        >
       </article>{/each}
   </div>
-  <p class="experiment-note">
-    A uses the shipped motion. B and C change timing and easing for this lab only. Choosing a study
-    does not change the library or homepage.
-  </p>
 </section>
-
-<details class="checks-details">
-  <summary>Behavior &amp; review <span>Hover, state, instances and visual checks</span></summary>
-  <section class="checks-section" aria-label="Real component behavior">
-    <div class="behavior-panel">
-      <h2>Component behavior</h2>
-      <p>These instances use the library’s normal controls and timing.</p>
-      <div class="behavior-options">
-        <label><input type="checkbox" bind:checked={hover} /> Hover to preview</label><label
-          ><input type="checkbox" bind:checked={controlled} /> Keep open</label
-        ><label><input type="checkbox" bind:checked={mounted} /> Mount instances</label>
-      </div>
-      <div class="live-stage" data-testid="live-instances">
-        {#if mounted}{#each [0, 1, 2] as index}<button
-              class="live-folder"
-              aria-label={'Toggle live folder ' + (index + 1)}
-              aria-pressed={controlled}
-              onclick={() => (controlled = !controlled)}
-              ><AnimatedFolder
-                bind:this={liveIcons[index]}
-                size={48}
-                {hover}
-                open={controlled}
-                strokeWidth={stroke}
-                reducedMotion={reduced ? 'always' : 'system'}
-              /><span class="mono">0{index + 1}</span></button
-            >{/each}{:else}<p class="unmounted">
-            Instances unmounted. Their motion and listeners are cleaned up.
-          </p>{/if}
-      </div>
-      <button class="text-reset" onclick={resetAll}>Reset every instance ↺</button>
+<details class="review-details">
+  <summary>Visual checks <span>Geometry, weight and spacing</span></summary>
+  <div class="review-panel">
+    {#each ['Recognizable at 16px', 'Clean edges without doubled strokes', 'Balanced opposite spacing', 'Outline and filled feel like one family'] as item}<label
+        class="review-check"
+        ><input type="checkbox" value={item} bind:group={checked} /><span>{item}</span></label
+      >{/each}
+    <div class="review-count">
+      <span class="mono">{checked.length} / 4 REVIEWED</span><span>This session only</span>
     </div>
-    <div class="review-panel">
-      <h2>Visual checks</h2>
-
-      {#each ['Recognizable at 16px', 'Balanced panel spacing', 'A natural start and finish', 'Clear in both light and dark'] as item}<label
-          class="review-check"
-          ><input type="checkbox" value={item} bind:group={checked} /><span>{item}</span></label
-        >{/each}
-      <div class="review-count">
-        <span class="mono">{checked.length} / 4 REVIEWED</span><span>This session only</span>
-      </div>
-    </div>
-  </section>
+  </div>
 </details>
 
 <style>
@@ -401,7 +340,7 @@
   }
   .workbench {
     display: grid;
-    grid-template-columns: 232px minmax(0, 1fr);
+    grid-template-columns: 264px minmax(0, 1fr);
     border: 1px solid #e4e4e7;
     border-radius: 10px;
     overflow: hidden;
@@ -412,9 +351,17 @@
     border-right: 1px solid #e4e4e7;
   }
   .panel-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-size: 13px;
     font-weight: 550;
     margin-bottom: 22px;
+  }
+  .panel-title span {
+    color: #a1a1aa;
+    font-size: 10px;
+    font-weight: 400;
   }
   .field-label {
     display: block;
@@ -427,7 +374,7 @@
     border: 1px solid #e4e4e7;
     border-radius: 6px;
     padding: 8px;
-    background: #fff;
+    background: white;
     color: #27272a;
     font-size: 12px;
     min-height: 36px;
@@ -446,8 +393,16 @@
   .icon-select select {
     padding-left: 40px;
   }
+  fieldset {
+    border: 0;
+    padding: 0;
+    min-width: 0;
+  }
+  legend {
+    padding: 0;
+  }
   .setting {
-    margin-top: 19px;
+    margin: 18px 0 0;
   }
   .segmented {
     display: flex;
@@ -464,10 +419,11 @@
     color: #71717a;
     border-radius: 4px;
     font-size: 12px;
+    min-height: 29px;
   }
   .segmented button[aria-pressed='true'] {
     color: #18181b;
-    background: #fff;
+    background: white;
   }
   .ink-options {
     display: flex;
@@ -499,55 +455,131 @@
     display: flex;
     justify-content: space-between;
   }
-  output,
-  .range-ends {
+  output {
     font-variant-numeric: tabular-nums;
   }
   .range-label output {
     color: #6366f1;
   }
+  .stroke-control {
+    display: flex;
+    gap: 9px;
+    align-items: center;
+  }
   input[type='range'] {
     width: 100%;
+    min-width: 0;
     accent-color: #6366f1;
     height: 18px;
     margin: 0;
     cursor: pointer;
   }
-  .range-ends {
+  .small-button {
+    border: 1px solid #e4e4e7;
+    background: white;
+    color: #71717a;
+    border-radius: 5px;
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    padding: 0;
+    font-size: 15px;
+  }
+  .hint {
+    font-size: 10px;
+    color: #92929e;
+    line-height: 1.65;
+    margin: 9px 0 0;
+  }
+  .size-section {
+    margin-top: 20px;
+    padding-top: 18px;
+    border-top: 1px solid #e4e4e7;
+  }
+  .size-heading {
     display: flex;
     justify-content: space-between;
-    font-size: 9px;
+    align-items: center;
+    margin-bottom: 9px;
+  }
+  .size-heading .field-label {
+    margin: 0;
+  }
+  .unit {
     color: #a1a1aa;
-    margin-top: 4px;
+    font-size: 11px;
+  }
+  .axis-control {
+    display: grid;
+    grid-template-columns: 22px 28px 1fr 28px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .axis-control label {
+    font-size: 12px;
+    color: #71717a;
+  }
+  input[type='number'] {
+    width: 100%;
+    min-width: 0;
+    appearance: textfield;
+    -moz-appearance: textfield;
+    border: 1px solid #e4e4e7;
+    border-radius: 5px;
+    background: white;
+    color: #27272a;
+    padding: 5px;
+    height: 28px;
+    text-align: center;
+    font-size: 12px;
+    font-variant-numeric: tabular-nums;
+  }
+  input[type='number']::-webkit-inner-spin-button {
+    appearance: none;
   }
   input[type='checkbox'] {
     accent-color: #4f46e5;
-    width: 15px;
-    height: 15px;
+    width: 14px;
+    height: 14px;
     flex-shrink: 0;
     cursor: pointer;
+  }
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #71717a;
+    font-size: 11px;
+    cursor: pointer;
+    margin-top: 12px;
+  }
+  .checkbox-row input {
+    margin: 0;
   }
   .switch-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    color: #71717a;
     font-size: 12px;
-    margin-top: 20px;
+    color: #71717a;
     cursor: pointer;
+    margin-top: 18px;
   }
   .switch-row + .switch-row {
-    margin-top: 12px;
+    margin-top: 10px;
   }
-  .hint {
+  .reset-button {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    border: 1px solid #e4e4e7;
+    border-radius: 5px;
+    background: white;
+    color: #71717a;
+    padding: 7px 10px;
     font-size: 11px;
-    color: #92929e;
-    line-height: 1.7;
-    margin: 10px 0 0;
-  }
-  .preference {
-    font-size: 10px;
+    margin-top: 20px;
   }
   .canvas-panel {
     min-width: 0;
@@ -565,19 +597,19 @@
     font-weight: 500;
   }
   .canvas-topline > .mono {
-    color: #a1a1aa;
     font-size: 10px;
+    color: #a1a1aa;
     align-self: center;
   }
   .canvas {
     flex: 1;
-    min-height: 328px;
+    min-height: 420px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 34px;
-    padding: 36px 20px 22px;
+    gap: 54px;
+    padding: 58px 48px 30px;
     background: #fff;
   }
   .canvas.dark {
@@ -605,7 +637,7 @@
     display: none;
     background: #818cf844;
   }
-  .gridded .axis {
+  .guided .axis {
     display: block;
   }
   .horizontal {
@@ -616,97 +648,87 @@
     width: 1px;
     height: calc(100% + 24px);
   }
-  .grid-number {
+  .spacing {
     position: absolute;
-    bottom: -18px;
-    right: -1px;
-    font-size: 9px;
-    color: #a1a1aa;
+    font-size: 10px;
+    color: #92929e;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
-  .state-caption {
+  .spacing.top {
+    top: -25px;
+  }
+  .spacing.bottom {
+    bottom: -25px;
+  }
+  .spacing.left {
+    right: calc(100% + 14px);
+  }
+  .spacing.right {
+    left: calc(100% + 14px);
+  }
+  .dark .spacing {
+    color: #a5b4fc;
+  }
+  .canvas-status {
     display: flex;
     align-items: center;
     gap: 7px;
+    color: #92929e;
     font-size: 11px;
-    color: #71717a;
   }
-  .dark .state-caption {
-    color: #b4b4c5;
-  }
-  .state-caption > .mono {
+  .canvas-status > span:last-child {
+    margin-left: 8px;
     font-size: 10px;
-    color: #a1a1aa;
-    margin-left: 10px;
+    font-variant-numeric: tabular-nums;
   }
-  .state-dot {
+  .status-dot {
     width: 4px;
     height: 4px;
     border-radius: 50%;
     background: #818cf8;
   }
-  .transport {
+  .spacing-panel {
     border-top: 1px solid #f0f0f2;
-    padding: 20px 22px;
+    padding: 22px;
   }
-  .transport-buttons {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin-bottom: 19px;
-  }
-  .transport button,
-  .comparison-actions button {
-    border: 1px solid #e4e4e7;
-    border-radius: 5px;
-    background: #fff;
-    padding: 6px 12px;
-    min-height: 32px;
-    font-size: 12px;
-    color: #52525b;
-  }
-  .transport .play-button {
-    background: #27272a;
-    border-color: #27272a;
-    color: white;
-  }
-  .play-button > span {
-    font-size: 9px;
-    margin-right: 6px;
-  }
-  .state-buttons {
-    display: flex;
-    gap: 5px;
-    margin-left: auto;
-  }
-  .timeline-label {
+  .spacing-title {
     display: flex;
     justify-content: space-between;
-    font-size: 11px;
-    color: #71717a;
-    margin-bottom: 6px;
+    align-items: center;
+    gap: 20px;
+    color: #52525b;
+    font-size: 12px;
   }
-  .timeline-label output {
+  .balance-state {
+    font-size: 10px;
+    color: #a1a1aa;
+  }
+  .balance-state.balanced {
     color: #6366f1;
   }
-  .motion-notice {
+  .spacing-values {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    padding: 18px 0 5px;
+  }
+  .spacing-values > div {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
     font-size: 11px;
-    color: #6366f1;
+    color: #a1a1aa;
   }
-  button:disabled,
-  input:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-  button {
-    transition:
-      border-color 0.15s,
-      background-color 0.15s;
+  .spacing-values output {
+    color: #52525b;
+    font-size: 14px;
   }
   .optical-row {
     display: grid;
-    grid-template-columns: 206px 1fr 180px;
+    grid-template-columns: 242px 1fr 180px;
     align-items: center;
-    padding: 20px 22px;
+    padding: 22px;
     border-bottom: 1px solid #e4e4e7;
     gap: 24px;
   }
@@ -725,8 +747,7 @@
     align-items: end;
     gap: 16px;
   }
-  .size-sample,
-  .endpoints > div {
+  .size-sample {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -737,101 +758,86 @@
     display: grid;
     place-items: center;
   }
-  .size-sample span,
-  .endpoints span {
+  .size-sample span {
     font-size: 9px;
     color: #a1a1aa;
   }
-  .endpoints {
-    display: flex;
-    justify-content: space-around;
-    border-left: 1px solid #e4e4e7;
-    padding-left: 20px;
-    gap: 20px;
+  .optical-note {
+    color: #92929e;
+    font-size: 10px;
+    text-align: right;
   }
   .comparison-section {
     padding-top: 28px;
   }
-  .section-head {
+  .section-heading {
+    display: flex;
+    justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
   }
-  .section-head h2 {
+  h2 {
     font-size: 16px;
     letter-spacing: -0.02em;
+    margin: 0;
   }
-  .section-head .button {
+  .section-heading > span {
     font-size: 11px;
-    min-height: 32px;
-    padding: 6px 12px;
-    border-radius: 5px;
+    color: #a1a1aa;
   }
   .comparison-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
-  .comparison-grid article {
+  article {
     border: 1px solid #e4e4e7;
-    padding: 16px;
+    padding: 18px;
     border-radius: 8px;
   }
-  .comparison-grid article.selected {
+  article.selected {
     border-color: #a5b4fc;
   }
   .comparison-heading {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 10px;
-    color: #92929e;
-    font-size: 10px;
+    gap: 16px;
   }
-  .letter {
-    font-size: 11px;
-    color: #52525b;
+  h3 {
+    margin: 0;
+    font-size: 13px;
   }
-  .selected .letter {
-    color: #4f46e5;
-  }
-  .current-label {
-    margin-left: auto;
+  .comparison-heading > span {
+    color: #a1a1aa;
     font-size: 10px;
   }
   .comparison-preview {
-    height: 110px;
+    height: 130px;
     display: grid;
     place-items: center;
   }
-  .comparison-grid h3 {
-    font-size: 13px;
-    margin-bottom: 13px;
-  }
-  .comparison-actions {
+  article > button {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    gap: 8px;
-  }
-  .comparison-actions button {
+    margin-left: auto;
+    min-width: 100px;
+    border: 1px solid #e4e4e7;
+    border-radius: 5px;
+    background: white;
+    color: #71717a;
+    padding: 6px 10px;
     font-size: 11px;
-    padding-inline: 10px;
   }
-  .comparison-actions button > span {
-    margin-left: 12px;
-  }
-  .comparison-actions button[aria-pressed='true'] {
-    border-color: #c7d2fe;
+  article > button[aria-pressed='true'] {
     color: #4f46e5;
+    border-color: #c7d2fe;
     background: #f8f9ff;
   }
-  .experiment-note {
-    color: #92929e;
-    font-size: 11px;
-    margin: 14px 0 0;
-    max-width: 740px;
-  }
-  .checks-details {
-    margin-top: 28px;
+  .review-details {
     border-top: 1px solid #e4e4e7;
+    margin-top: 28px;
   }
   summary {
     cursor: pointer;
@@ -841,83 +847,16 @@
   }
   summary span {
     margin-left: 14px;
-    font-size: 11px;
     color: #a1a1aa;
+    font-size: 11px;
   }
   summary:focus-visible {
     outline: 3px solid #6366f1;
     outline-offset: 4px;
   }
-  .checks-section {
-    display: grid;
-    grid-template-columns: 1.15fr 1fr;
-    gap: 24px;
-    padding-bottom: 12px;
-  }
-  .behavior-panel,
   .review-panel {
-    padding: 22px;
-    border: 1px solid #e4e4e7;
-    border-radius: 8px;
-  }
-  .checks-section h2 {
-    font-size: 16px;
-    margin-bottom: 10px;
-    letter-spacing: -0.02em;
-  }
-  .checks-section p {
-    color: #92929e;
-    font-size: 11px;
-    margin-bottom: 20px;
-  }
-  .behavior-options {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 14px;
-  }
-  .behavior-options label {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 11px;
-    color: #71717a;
-    cursor: pointer;
-  }
-  .live-stage {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    min-height: 128px;
-    margin: 18px 0 10px;
-    background: #fafafa;
-    border-radius: 6px;
-  }
-  .live-folder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    border: 0;
-    background: transparent;
-    color: #4f46e5;
-    padding: 16px 8px;
-    border-radius: 5px;
-  }
-  .live-folder span {
-    font-size: 9px;
-    color: #a1a1aa;
-  }
-  .unmounted {
-    text-align: center;
-    padding: 14px;
-    margin: 0 !important;
-  }
-  .text-reset {
-    border: 0;
-    color: #71717a;
-    background: transparent;
-    font-size: 11px;
-    padding: 6px 0;
+    max-width: 550px;
+    padding-bottom: 15px;
   }
   .review-check {
     display: flex;
@@ -935,19 +874,21 @@
   .review-count {
     display: flex;
     justify-content: space-between;
-    margin-top: 18px;
     font-size: 10px;
     color: #a1a1aa;
+    margin-top: 18px;
   }
   .review-count .mono {
     color: #6366f1;
   }
+  button:disabled,
+  input:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
   @media (hover: hover) and (pointer: fine) {
     button:not(:disabled):hover {
       border-color: #a5b4fc;
-    }
-    .live-folder:hover {
-      background: #eef2ff;
     }
   }
 </style>

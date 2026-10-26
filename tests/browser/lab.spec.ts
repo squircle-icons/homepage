@@ -1,38 +1,33 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
-
 const main = (page: Page) => page.getByTestId('main-study');
-const lid = (page: Page) => main(page).locator('[data-part="lid"]');
-async function scrub(page: Page, value: number) {
-  await page.getByRole('slider', { name: 'Opening timeline' }).fill(String(value));
-  await expect(page.getByTestId('timeline-value')).toHaveText(`${value}%`);
+async function size(page: Page, axis: 'X' | 'Y', value: number) {
+  await page.getByRole('spinbutton', { name: 'Size ' + axis, exact: true }).fill(String(value));
+  await page.getByRole('spinbutton', { name: 'Size ' + axis, exact: true }).press('Tab');
+}
+async function balanced(page: Page) {
+  await expect(page.getByTestId('balance-state')).toHaveText('Opposite sides balanced');
+  for (const name of ['horizontal-spacing', 'vertical-spacing']) {
+    const values = (await page.getByTestId(name).innerText()).split('/').map(Number);
+    expect(values[0]).toBeCloseTo(values[1], 3);
+    expect(values[0]).toBeGreaterThan(0);
+  }
 }
 
-test('lab uses real artwork, renders at rest, and has a desktop workspace', async ({
+test('static Lab renders actual outline and filled exports without motion controls', async ({
   page,
   request,
 }, info) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
-  page.on('console', (message) => {
-    if (message.text().includes('binding_property_non_reactive')) errors.push(message.text());
-  });
-  const response = await request.get('/lab');
-  expect(response.ok()).toBe(true);
-  expect(await response.text()).toContain('Folder motion preview');
+  const html = await (await request.get('/lab')).text();
+  expect(html).toContain('Folder outline preview');
+  expect(html).toContain('Compare filled Folder');
   await page.goto('/lab');
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Folder lab');
-  await expect(page.getByRole('navigation', { name: 'Main navigation' })).toHaveCount(0);
   await expect(page.locator('.site-header, footer')).toHaveCount(0);
-  await expect(page.getByRole('link', { name: 'Back to icons' })).toHaveAttribute('href', '/icons');
-  expect(
-    await page
-      .locator('svg [data-part="lid"]')
-      .evaluateAll((elements) =>
-        elements.reduce((count, element) => count + element.getAnimations().length, 0),
-      ),
-  ).toBe(0);
-  await expect(main(page).locator('svg')).toHaveAttribute('width', '168');
+  await expect(page.getByRole('button', { name: /^(Play|Pause|Play all)$/ })).toHaveCount(0);
+  await expect(page.getByLabel('Opening timeline')).toHaveCount(0);
   await expect(
     page.getByRole('region', { name: 'Folder optical sizes' }).locator('.size-sample svg'),
   ).toHaveCount(4);
@@ -42,18 +37,9 @@ test('lab uses real artwork, renders at rest, and has a desktop workspace', asyn
       .locator('.size-sample svg')
       .evaluateAll((elements) => elements.map((item) => item.getAttribute('width'))),
   ).toEqual(['16', '20', '24', '48']);
-  await expect(page.getByLabel('Icon', { exact: true })).toHaveValue('folder');
-  await page.getByRole('button', { name: 'Dark', exact: true }).click();
-  await page.getByRole('button', { name: 'Indigo stroke' }).click();
-  await expect(main(page).locator('svg')).toHaveAttribute('stroke', '#a5b4fc');
-  await page.getByLabel('Drawing grid').uncheck();
-  await expect(page.locator('.drawing')).not.toHaveClass(/gridded/);
-  await page.getByRole('button', { name: 'Light', exact: true }).click();
-  await page.getByRole('button', { name: 'Ink stroke' }).click();
-  await page.getByLabel('Drawing grid').check();
-  await page.locator('summary').filter({ hasText: 'Behavior & review' }).click();
-  await page.getByLabel('Recognizable at 16px').check();
-  await expect(page.locator('.review-count')).toContainText('1 / 4 REVIEWED');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.125 / 4.125');
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
   for (const width of [1280, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -61,186 +47,126 @@ test('lab uses real artwork, renders at rest, and has a desktop workspace', asyn
     );
     if (info.project.name === 'chromium') {
       await mkdir('.artifacts/previews', { recursive: true });
-      await page.evaluate(() => window.scrollTo(0, 0));
-      await page.screenshot({ path: `.artifacts/previews/lab-${width}.png`, fullPage: true });
+      await page.screenshot({
+        path: `.artifacts/previews/lab-static-${width}.png`,
+        fullPage: true,
+      });
     }
   }
   expect(errors).toEqual([]);
 });
 
-test('timeline supports deterministic pause, speed, presentation and reset', async ({
+test('independent X/Y sizing keeps the outline stroke constant and reports actual margins', async ({
   page,
 }, info) => {
   await page.goto('/lab');
-  await scrub(page, 50);
-  await expect(main(page).locator('[data-status]')).toHaveAttribute('data-status', 'Paused');
-  expect(await lid(page).evaluate((element) => element.getAnimations()[0].currentTime)).toBe(110);
-  const halfway = await lid(page).evaluate((element) => getComputedStyle(element).transform);
-  expect(halfway).not.toBe('matrix(1, 0, 0, 1, 0, 0)');
-  await page.getByLabel('Playback speed').selectOption('0.25');
-  expect(await lid(page).evaluate((element) => element.getAnimations()[0].playbackRate)).toBe(0.25);
-  await page.getByRole('slider', { name: 'Stroke width' }).fill('2');
-  await page.getByRole('button', { name: 'Indigo stroke' }).click();
+  const path = main(page).locator('path').first();
+  const originalStroke = await path.evaluate((element) => getComputedStyle(element).strokeWidth);
+  await size(page, 'X', 75);
+  await size(page, 'Y', 110);
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('75');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('110');
+  expect(await path.evaluate((element) => getComputedStyle(element).strokeWidth)).toBe(
+    originalStroke,
+  );
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.375 / 4.375');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.425 / 3.425');
+  await page.getByRole('button', { name: 'Increase stroke width' }).click();
   await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '2');
-  expect(await lid(page).evaluate((element) => getComputedStyle(element).transform)).toBe(halfway);
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.250 / 4.250');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.300 / 3.300');
+  await balanced(page);
   if (info.project.name === 'chromium')
-    await page.screenshot({ path: '.artifacts/previews/lab-paused.png', fullPage: true });
-  await page.getByRole('button', { name: 'Play', exact: true }).click();
-  await expect(page.getByTestId('timeline-value')).toHaveText('100%');
-  expect(await lid(page).evaluate((element) => element.getAnimations().length)).toBe(0);
-  await scrub(page, 35);
-  await page.getByRole('button', { name: 'Pause', exact: true }).click();
-  await expect(main(page).locator('[data-status]')).toHaveAttribute('data-status', 'Paused');
-  await page.getByRole('button', { name: 'Reset', exact: true }).click();
-  await expect(page.getByTestId('timeline-value')).toHaveText('0%');
-  expect(await lid(page).evaluate((element) => element.getAnimations().length)).toBe(0);
-  expect(await lid(page).evaluate((element) => getComputedStyle(element).transform)).toBe(
-    'matrix(1, 0, 0, 1, 0, 0)',
-  );
-  await scrub(page, 100);
-  expect(await lid(page).evaluate((element) => getComputedStyle(element).transform)).toContain(
-    '0.72',
-  );
-  await scrub(page, 0);
-  await page.getByRole('slider', { name: 'Opening timeline' }).focus();
-  await page.keyboard.press('ArrowRight');
-  await expect(page.getByTestId('timeline-value')).toHaveText('1%');
+    await page.screenshot({ path: '.artifacts/previews/lab-static-xy.png', fullPage: true });
+  await page.getByRole('button', { name: /Reset geometry/ }).click();
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('100');
 });
 
-test('comparison studies use isolated timings and reset all instances', async ({ page }) => {
-  await page.addInitScript(() => {
-    const original = Element.prototype.animate;
-    (window as any).__labAnimations = [];
-    Element.prototype.animate = function (...args) {
-      const animation = original.apply(this, args);
-      (window as any).__labAnimations.push({
-        animation,
-        nativeTiming: animation.effect?.getTiming(),
-      });
-      return animation;
-    };
-  });
-  await page.goto('/lab');
-  await page.getByRole('button', { name: 'Play all', exact: true }).click();
-  await expect
-    .poll(() => page.evaluate(() => (window as any).__labAnimations.length))
-    .toBeGreaterThanOrEqual(3);
-  expect(
-    await page.evaluate(() =>
-      (window as any).__labAnimations.map(
-        (item: { animation: Animation }) => item.animation.effect?.getTiming().duration,
-      ),
-    ),
-  ).toEqual([220, 280, 160]);
-  expect(await page.evaluate(() => (window as any).__labAnimations[0].nativeTiming)).toMatchObject({
-    duration: 220,
-    easing: 'cubic-bezier(0.2, 0.8, 0.2, 1)',
-  });
-  await page.getByTestId('variant-B').getByRole('button', { name: 'Use study' }).click();
-  await scrub(page, 50);
-  expect(await lid(page).evaluate((element) => element.getAnimations()[0].currentTime)).toBe(140);
-  await page.locator('summary').filter({ hasText: 'Behavior & review' }).click();
-  await page.getByLabel('Keep open', { exact: true }).check();
-  await page.getByLabel('Mount instances', { exact: true }).uncheck();
-  await expect(page.getByTestId('live-instances').locator('svg')).toHaveCount(0);
-  await page.getByLabel('Mount instances', { exact: true }).check();
-  await expect(page.getByTestId('live-instances').locator('svg')).toHaveCount(3);
-  await page.getByLabel('Hover to preview', { exact: true }).check();
-  await page.getByRole('button', { name: /Reset every instance/ }).click();
-  await expect(page.getByLabel('Keep open', { exact: true })).not.toBeChecked();
-  await expect(page.getByLabel('Hover to preview', { exact: true })).not.toBeChecked();
-  await expect(page.getByTestId('timeline-value')).toHaveText('0%');
-  await expect.poll(() => page.evaluate(() => document.getAnimations().length)).toBe(0);
-});
-
-test('reduced motion settles playback and exposes both endpoint states', async ({ page }) => {
-  await page.goto('/lab');
-  await scrub(page, 40);
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeDisabled();
-  await expect(page.getByRole('slider', { name: 'Opening timeline' })).toBeDisabled();
-  await expect(page.getByTestId('timeline-value')).toHaveText('100%');
-  expect(
-    await page
-      .locator('svg [data-part="lid"]')
-      .evaluateAll((elements) =>
-        elements.reduce((count, element) => count + element.getAnimations().length, 0),
-      ),
-  ).toBe(0);
-  await page.getByRole('button', { name: 'Closed', exact: true }).click();
-  await expect(page.getByTestId('timeline-value')).toHaveText('0%');
-  await page.getByRole('button', { name: 'Open', exact: true }).click();
-  await expect(page.getByTestId('timeline-value')).toHaveText('100%');
-  await page.emulateMedia({ reducedMotion: 'no-preference' });
-  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeEnabled();
-  await page.getByLabel('Reduce motion', { exact: true }).check();
-  await expect(page.getByRole('button', { name: 'Play all', exact: true })).toBeDisabled();
-  expect(
-    await page
-      .locator('svg [data-part="lid"]')
-      .evaluateAll((elements) =>
-        elements.reduce((count, element) => count + element.getAnimations().length, 0),
-      ),
-  ).toBe(0);
-});
-
-test('rapid operations settle correctly and navigation cleans up paused motion', async ({
+test('filled Folder has a genuine negative-space divider and no configurable stroke', async ({
   page,
-}) => {
+}, info) => {
   await page.goto('/lab');
-  await scrub(page, 30);
-  const controls = page.getByRole('region', { name: 'Folder motion workbench' });
-  for (const name of ['Closed', 'Open', 'Closed', 'Open']) {
-    await controls.getByRole('button', { name, exact: true }).click();
-  }
-  await expect(page.getByTestId('timeline-value')).toHaveText('100%');
-  await expect.poll(() => lid(page).evaluate((element) => element.getAnimations().length)).toBe(0);
-  await scrub(page, 60);
-  await page.evaluate(() => {
-    (window as any).__detachedMotion = document
-      .querySelector('[data-testid="main-study"] [data-part="lid"]')!
-      .getAnimations()[0];
-  });
+  await page.getByRole('button', { name: 'Filled', exact: true }).click();
+  await expect(main(page).locator('svg')).toHaveAttribute('fill-rule', 'evenodd');
+  await expect(main(page).locator('svg')).toHaveAttribute('stroke', 'none');
+  await expect(page.getByRole('slider', { name: 'Stroke width' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Increase stroke width' })).toBeDisabled();
+  const fill = await main(page)
+    .locator('path')
+    .evaluate((element) => {
+      const path = element as SVGGeometryElement;
+      return {
+        slot: path.isPointInFill(new DOMPoint(12, 11)),
+        panel: path.isPointInFill(new DOMPoint(12, 15)),
+      };
+    });
+  expect(fill).toEqual({ slot: false, panel: true });
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.125 / 4.125');
+  await size(page, 'X', 80);
+  await size(page, 'Y', 115);
+  await balanced(page);
+  if (info.project.name === 'chromium')
+    await page.screenshot({ path: '.artifacts/previews/lab-static-filled.png', fullPage: true });
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+});
+
+test('linked axes clamp together, step with buttons and reset cleanly', async ({ page }) => {
+  await page.goto('/lab');
+  await page.getByLabel('Link X/Y proportions').check();
+  await page.getByRole('button', { name: 'Increase size X', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('105');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('105');
+  await size(page, 'X', 500);
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('115');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('115');
+  await expect(page.getByRole('button', { name: 'Increase size X', exact: true })).toBeDisabled();
+  await size(page, 'Y', -50);
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('50');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('50');
+  await page.getByRole('button', { name: /Reset geometry/ }).click();
+  await expect(page.getByLabel('Link X/Y proportions')).not.toBeChecked();
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('100');
+  await page.getByRole('button', { name: 'Decrease size Y', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('95');
+  await balanced(page);
+});
+
+test('surfaces, colors, guides and visual review work for both static styles', async ({ page }) => {
+  await page.goto('/lab');
+  await page.getByRole('button', { name: 'Dark', exact: true }).click();
+  await page.getByRole('button', { name: 'Indigo color' }).click();
+  await expect(main(page).locator('svg')).toHaveAttribute('stroke', '#a5b4fc');
+  await page.getByRole('button', { name: 'Filled', exact: true }).click();
+  await expect(main(page).locator('svg')).toHaveAttribute('fill', '#a5b4fc');
+  await page.getByLabel('Drawing grid').uncheck();
+  await expect(page.locator('.drawing')).not.toHaveClass(/gridded/);
+  await page.getByLabel('Spacing guides').uncheck();
+  await expect(page.getByTestId('spacing-top')).toHaveCount(0);
+  await page.getByLabel('Spacing guides').check();
+  await expect(page.getByTestId('spacing-top')).toHaveText('4.125');
+  await page.locator('summary').filter({ hasText: 'Visual checks' }).click();
+  await page.getByLabel('Recognizable at 16px').check();
+  await expect(page.locator('.review-count')).toContainText('1 / 4 REVIEWED');
   await page.getByRole('link', { name: 'Back to icons' }).click();
   await expect(page).toHaveURL(/\/icons$/);
-  expect(await page.evaluate(() => (window as any).__detachedMotion.playState)).toBe('idle');
 });
 
-test('unsupported animation browsers retain endpoint controls', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(Element.prototype, 'animate', { value: undefined, configurable: true });
-  });
-  await page.goto('/lab');
-  await expect(page.getByText('Animation playback is unavailable', { exact: false })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Play', exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: 'Open', exact: true }).click();
-  await expect(page.getByTestId('timeline-value')).toHaveText('100%');
-  await page.getByRole('button', { name: 'Closed', exact: true }).click();
-  await expect(page.getByTestId('timeline-value')).toHaveText('0%');
-});
-
-test('horizontal Folder balances opposite visible margins at each stroke weight', async ({
+test('opposite visible margins stay balanced across styles, stroke weights and nonuniform sizing', async ({
   page,
 }) => {
   await page.goto('/lab');
-  for (const width of [1, 1.75, 2, 2.5]) {
-    await page.getByRole('slider', { name: 'Stroke width' }).fill(String(width));
-    const padding = await main(page)
-      .locator('svg')
-      .evaluate((element) => {
-        const svg = element as SVGSVGElement;
-        const box = svg.getBBox();
-        const halfStroke = Number(svg.getAttribute('stroke-width')) / 2;
-        return [
-          box.x - halfStroke,
-          box.y - halfStroke,
-          24 - box.x - box.width - halfStroke,
-          24 - box.y - box.height - halfStroke,
-        ];
-      });
-    expect(padding[0]).toBeCloseTo(padding[2], 6);
-    expect(padding[1]).toBeCloseTo(padding[3], 6);
-    expect(padding[1]).toBeGreaterThan(padding[0]);
-    expect(padding.every((inset) => inset > 0)).toBe(true);
+  for (const weight of [1, 1.75, 2, 2.5]) {
+    await page.getByRole('slider', { name: 'Stroke width' }).fill(String(weight));
+    await balanced(page);
+  }
+  for (const style of ['Filled', 'Outline']) {
+    await page.getByRole('button', { name: style, exact: true }).click();
+    await size(page, 'X', 115);
+    await size(page, 'Y', 50);
+    await balanced(page);
+    expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
   }
 });

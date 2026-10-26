@@ -39,8 +39,8 @@ The included tarball is a reviewed alpha artifact, not an npm release. Original 
 
 ## Folder lab
 
-Open the desktop-only `/lab` workspace (without the site app bar or footer) to review the first motion study: 16/20/24/48px optical checks, enlarged grid, light/dark surfaces, ink/indigo strokes, deterministic opening-timeline scrubbing, Play/Pause/Reset, speed controls, and three timing/easing studies. The real-component area exercises opt-in hover, controlled state, multiple instances, and mount/unmount. System and explicit reduced motion settle to endpoint states. The eye-test checklist is session-only.
+Open the desktop-only `/lab` workspace for static icon review. It has no site app bar or footer. Switch between real Outline and Filled Folder exports, adjust Outline stroke weight, resize the source geometry on X/Y independently or with linked proportions, and inspect measured opposite margins on the 24×24 grid. Preview scaling stays centered and preserves the chosen Outline stroke weight. Light/dark surfaces, ink/indigo colors and 16/20/24/48px samples support optical review.
 
-Study A matches the installed package's current 220ms motion; B/C are lab-only experiments. The lab imports real package components and controls their WAAPI animation objects without changing SVG geometry, controller-owned styles, or public package APIs. Selecting a study does not promote it to the library. See [lab review notes](design/LAB.md).
+X/Y values are percentages of source geometry (100% is the original); they are local previews, not saved artwork edits. Filled Folder is separately authored fill-only geometry with a negative-space divider. Other filled icons are not implemented yet. Motion development is paused and motion controls have been removed from the Lab. See [lab review notes](design/LAB.md).
 
 ![Folder lab desktop preview](design/previews/lab-desktop.png)

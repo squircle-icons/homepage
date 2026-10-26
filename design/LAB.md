@@ -1,33 +1,23 @@
-# Folder motion lab
+# Static Folder lab
 
-`/lab` is a desktop review workbench without the site app bar or footer for the existing Folder, using real exports from the pinned Svelte artifact. Other icon choices are explicitly unavailable until they have a study. No library geometry or motion recipe is changed by this page.
-
-The workspace uses a fixed desktop layout. Additional behavior and visual-check tools are under the “Behavior & review” disclosure.
-
-## Current Folder candidate
-
-The Folder is a horizontal rectangle with a straight front-panel upper edge and one outer contour. Its bounds are x=3..21 and y=5..19. At stroke 1.75, visible left/right padding is 2.125 units and top/bottom padding is 4.125 units. Opposite sides match exactly; the two pairs may differ to preserve the real object's aspect ratio. Browser checks measure this balance at four stroke weights. Existing motion recipes and A/B/C timing settings are unchanged; this remains a geometry review candidate.
-
-## Current review priority
-
-Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/DESIGN_RULES.md). First review static Folder geometry: preserve a real folder’s outer silhouette with appropriate rounded corners; its front-panel upper edge may be straight. Check for doubled contours and inconsistent stroke weight at actual sizes. Further motion refinement waits for an approved static baseline. Existing A/B/C controls are evaluation tools, not a requirement to animate every icon.
+`/lab` is a desktop workbench for reviewing icon geometry. It imports real Outline and Filled Folder components from the pinned Svelte package. There is no app bar, mobile layout, timeline, playback control or animation controller in this page. Motion development is paused.
 
 ## Review flow
 
-1. Inspect closed/open silhouettes and 16/20/24/48px optical sizes in light and dark.
-2. Play the enlarged preview, slow it to 0.5× or 0.25×, then scrub the opening timeline. Scrubbing pauses at an exact animation time; Play resumes. Reset returns to closed.
-3. Compare A (current 220ms library easing), B (280ms with more gradual acceleration), and C (160ms with an early settle). Play all for simultaneous playback, then select a study for the main timeline. Selection is local and resets the main preview.
-4. Use the real-component area to try hover, repeated controlled-state changes, three synchronized instances, and unmount/remount. Reset every instance also clears hover and controlled state.
-5. Review reduced motion. System preference cannot be overridden; the explicit checkbox adds reduced motion. Playback and scrubbing are disabled while reduced, with both endpoint controls available.
+1. Choose Outline or Filled. Outline exposes stroke weight; Filled uses solid geometry and a deliberately drawn negative-space divider, with stroke controls disabled.
+2. Adjust Size X and Size Y with their step buttons or number fields. These are percentages of the original source geometry, constrained to 50–115%. Link proportions when both axes should resize together. Reset geometry restores 100% / 100% and Outline weight 1.75.
+3. Inspect the spacing readout. Left equals right and top equals bottom; the two pairs may differ to preserve the real object's proportions. At the source size and default Outline weight, both styles have visible left/right padding of 2.125 units and top/bottom padding of 4.125 units. Readouts include Outline stroke, and update from actual rendered SVG bounds.
+4. Compare both styles at the same scale, then inspect the 16/20/24/48px samples in light and dark. Use ink or indigo and toggle grid/spacing guides as needed.
+5. Use the session-only visual checklist. No selection or preview adjustment automatically approves or saves a drawing.
 
-The review checklist records only this page session, with no persistence or automatic approval. A chosen experiment must be implemented in core, synchronized into Svelte, tested there, and then synced back into homepage before it becomes the shipped motion.
+Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/DESIGN_RULES.md). Folder is the first filled review candidate; no other filled icon is implied. Approved geometry must still be authored in core, then synchronized through Svelte into homepage.
 
-## Ownership and cleanup
+## Preview ownership
 
-`FolderStudy.svelte` wraps the actual animated Folder. The package controller owns SVG transforms. The lab modifies only its existing Animation object's timing, playback rate and currentTime. It never copies paths or writes group styles. A browser contract checks that study A's native duration/easing still match the pinned package, so dependency changes cannot silently relabel an experiment as the current default.
+`StaticFolderPreview.svelte` renders native package exports. It does not copy paths. Centered CSS transforms on the static groups preview independent X/Y changes. Outline paths use non-scaling strokes with the display magnification included, so stretching a shape does not stretch its selected line weight. Filled glyphs have no stroke. At non-default sizes or stroke weights, the two styles can have different outer bounds; the measured margins expose that difference.
 
-No motion autoplays or loops. UI animation progress is observed only during playback; the frame callback is stopped on pause/reset/reduced motion/destroy. A scoped MutationObserver updates the timeline readout. Both it and the system-preference listener are removed on teardown. An operation counter prevents pending asynchronous controls from reviving a reset or disposed study. Missing animation support retains endpoint inspection.
+SVG measurements happen after mount/update with a cancelable tick. There are no animation frames, motion styles/controllers, preference listeners or persistent storage. UI changes do not rewrite source SVGs or generated components.
 
 ## Verification
 
-Run `pnpm verify`. Lab browser tests exercise seven scenarios in Chromium, Firefox, and WebKit, including production prerender, no autoplay, 1280/1440px desktop fit, precise paused times, real component exports, comparison timings, interruption, reduced motion and cleanup. Captures are generated under `.artifacts/previews/lab-*.png`; visual approval remains a human decision.
+Run `pnpm verify`. Six Lab scenarios run in Chromium, Firefox and WebKit: static SSR/no playback, independent X/Y and preserved strokes, real filled cutouts, linked sizing/clamps/reset, surface/color/guides/review, and balanced opposite margins across styles and weights. Desktop captures are generated under `.artifacts/previews/lab-static-*.png`; they support human review and are not pixel baselines.
