@@ -14,6 +14,9 @@ test('lab uses real artwork, renders at rest, and has a desktop workspace', asyn
 }, info) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
+  page.on('console', (message) => {
+    if (message.text().includes('binding_property_non_reactive')) errors.push(message.text());
+  });
   const response = await request.get('/lab');
   expect(response.ok()).toBe(true);
   expect(await response.text()).toContain('Folder motion preview');
@@ -214,4 +217,25 @@ test('unsupported animation browsers retain endpoint controls', async ({ page })
   await expect(page.getByTestId('timeline-value')).toHaveText('100%');
   await page.getByRole('button', { name: 'Closed', exact: true }).click();
   await expect(page.getByTestId('timeline-value')).toHaveText('0%');
+});
+
+test('Folder has equal visible padding on every side at each stroke weight', async ({ page }) => {
+  await page.goto('/lab');
+  for (const width of [1, 1.75, 2, 2.5]) {
+    await page.getByRole('slider', { name: 'Stroke width' }).fill(String(width));
+    const padding = await main(page)
+      .locator('svg')
+      .evaluate((element) => {
+        const svg = element as SVGSVGElement;
+        const box = svg.getBBox();
+        const halfStroke = Number(svg.getAttribute('stroke-width')) / 2;
+        return [
+          box.x - halfStroke,
+          box.y - halfStroke,
+          24 - box.x - box.width - halfStroke,
+          24 - box.y - box.height - halfStroke,
+        ];
+      });
+    padding.forEach((inset) => expect(inset).toBeCloseTo(3 - width / 2, 6));
+  }
 });

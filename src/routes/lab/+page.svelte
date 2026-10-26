@@ -41,8 +41,8 @@
   let controlled = $state(false);
   let checked = $state<string[]>([]);
   let study = $state<FolderStudy>();
-  let comparisons: FolderStudy[] = [];
-  let liveIcons: { reset(): void }[] = [];
+  let comparisons = $state<FolderStudy[]>([]);
+  let liveIcons = $state<{ reset(): void }[]>([]);
   let mainHost: HTMLDivElement;
   let timeline = $state(0);
   let phase = $state('Closed');

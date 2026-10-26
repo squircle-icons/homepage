@@ -31,11 +31,12 @@ export const catalog = [
   {
     ...{
       name: 'folder',
-      description: 'A soft folder with a distinct tab and movable front lid.',
+      description:
+        'A rounded folder silhouette with a distinct tab and a straight movable front-panel edge.',
       tags: ['files', 'directory'],
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
-        'Original continuous tab and rear shell. The front panel bows gently at its top edge; motion opens a gap rather than morphing paths.',
+        'Original rounded outer contour preserves the folder tab and is drawn once. The contour bounds are x=3..21 and y=3..21: at the unchanged 1.75 stroke, visible padding is exactly 2.125 units on all four sides of the 24-unit viewBox. The front-panel upper edge is one straight horizontal stroke at y=10, without retracing the sides or bottom. Lower corners use matching 2.5-unit construction. Existing body/lid part names, stroke defaults and motion recipe are retained for this static review.',
     },
     component: Folder,
   },

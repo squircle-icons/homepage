@@ -4,6 +4,10 @@
 
 The workspace uses a fixed desktop layout. Additional behavior and visual-check tools are under the “Behavior & review” disclosure.
 
+## Current Folder candidate
+
+The front-panel upper edge is now straight. A single outer contour supplies the sides and bottom, removing doubled panel outlines. Its geometric bounds are x=3..21 and y=3..21. With stroke 1.75, visible padding is exactly 2.125 units on each of the four sides of the 24×24 viewBox. Browser checks measure that equality at four stroke weights. The existing motion recipes and A/B/C timing settings are unchanged; this is a geometry review candidate.
+
 ## Current review priority
 
 Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/DESIGN_RULES.md). First review static Folder geometry: preserve a real folder’s outer silhouette with appropriate rounded corners; its front-panel upper edge may be straight. Check for doubled contours and inconsistent stroke weight at actual sizes. Further motion refinement waits for an approved static baseline. Existing A/B/C controls are evaluation tools, not a requirement to animate every icon.
@@ -26,4 +30,4 @@ No motion autoplays or loops. UI animation progress is observed only during play
 
 ## Verification
 
-Run `pnpm verify`. Lab browser tests exercise six scenarios in Chromium, Firefox, and WebKit, including production prerender, no autoplay, 1280/1440px desktop fit, precise paused times, real component exports, comparison timings, interruption, reduced motion and cleanup. Captures are generated under `.artifacts/previews/lab-*.png`; visual approval remains a human decision.
+Run `pnpm verify`. Lab browser tests exercise seven scenarios in Chromium, Firefox, and WebKit, including production prerender, no autoplay, 1280/1440px desktop fit, precise paused times, real component exports, comparison timings, interruption, reduced motion and cleanup. Captures are generated under `.artifacts/previews/lab-*.png`; visual approval remains a human decision.
