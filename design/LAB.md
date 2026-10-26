@@ -9,7 +9,8 @@
 3. X and Y are independent percentages of source geometry. There is no maximum, artboard cap, aspect lock or automatic resizing when changing style or weight. Positive values from 1% are supported. Artwork may extend beyond the 24×24 grid; negative spacing and “Outside 24×24 grid” report that state.
 4. Rotate around the artboard center using the degree field or ±15° buttons. Negative angles and multiple full turns are accepted. Rotation applies to the canvas, actual-size samples and style comparisons. Reset rotation returns to 0° without changing X/Y. Reset geometry restores X/Y=100%, Regular and 0°.
 5. “Match Y to left spacing” remains an explicit convenience at 0°/180°. It changes Y once, without locking either axis. At other angles it is disabled because rotated asymmetric contours do not have the same spacing relationship.
-6. Inspect measured margins and 16/20/24/48px samples on light/dark surfaces in ink/indigo. The checklist and draft adjustments are session-only and do not approve or rewrite source drawings.
+6. Use Preview zoom (4×–24×, default 14×) to inspect contours without changing source X/Y, stroke or measured margins. Buttons, a slider and reset control magnification. The scrollable viewport supports keyboard panning at large zoom. Actual-size samples and comparison cards retain their own sizes. Zoom is shared while switching icons/styles, and Reset geometry leaves it unchanged.
+7. Inspect measured margins and 16/20/24/48px samples on light/dark surfaces in ink/indigo. The checklist and draft adjustments are session-only and do not approve or rewrite source drawings.
 
 The approved Folder's previous Y=110% preview was baked into its source. It now displays at 100%. Default Outline padding is 2.150 horizontal / 3.450 vertical; Filled padding is 2.125 / 3.3375. Opposite pairs may differ to preserve the object's proportions. After rotation, asymmetric silhouettes can have unequal bounding-box margins even though the rotation center remains fixed.
 
@@ -21,4 +22,4 @@ Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/
 
 ## Verification
 
-Run `pnpm verify`. Twelve Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual sizes, free independent X/Y above former limits, explicit spacing matching, filled counters, weight presets, all six review pairs, per-icon drafts, positive/negative/full-turn rotation, margin measurement, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.
+Run `pnpm verify`. Thirteen Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual sizes, free independent X/Y above former limits, explicit spacing matching, filled counters, weight presets, all six review pairs, per-icon drafts, positive/negative/full-turn rotation, margin measurement, independent zoom and scroll containment, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.

@@ -38,6 +38,31 @@
   let sizeX = $state(100);
   let sizeY = $state(100);
   let rotation = $state(0);
+  const DEFAULT_ZOOM = 14;
+  let zoom = $state(DEFAULT_ZOOM);
+  const previewSize = $derived(24 * zoom);
+  function panPreview(event: KeyboardEvent) {
+    const viewport = event.currentTarget as HTMLDivElement;
+    if (event.target !== viewport) return;
+    const directions: Record<string, [number, number]> = {
+      ArrowLeft: [-40, 0],
+      ArrowRight: [40, 0],
+      ArrowUp: [0, -40],
+      ArrowDown: [0, 40],
+    };
+    const delta = directions[event.key];
+    if (
+      delta &&
+      ((delta[0] && viewport.scrollWidth > viewport.clientWidth) ||
+        (delta[1] && viewport.scrollHeight > viewport.clientHeight))
+    ) {
+      event.preventDefault();
+      viewport.scrollBy(delta[0], delta[1]);
+    }
+  }
+  function changeZoom(value: number) {
+    zoom = Math.max(4, Math.min(24, Math.round(value)));
+  }
   let checked = $state<string[]>([]);
   let margins = $state<Margins>({
     icon: 'folder',
@@ -268,38 +293,83 @@
       </aside>
       <section class="canvas-panel" aria-label={'Static ' + iconName + ' workbench'}>
         <div class="canvas-topline">
-          <span><b>{selectedIcon}</b><span class="muted"> / {kind}</span></span><span class="mono"
-            >24 × 24 · 7× PREVIEW</span
-          >
+          <span><b>{selectedIcon}</b><span class="muted"> / {kind}</span></span>
+          <div class="zoom-tools" role="group" aria-label="Preview zoom controls">
+            <label for="lab-zoom">Zoom</label>
+            <button
+              class="zoom-button"
+              aria-label="Zoom out"
+              disabled={zoom <= 4}
+              onclick={() => changeZoom(zoom - 2)}>−</button
+            >
+            <input
+              id="lab-zoom"
+              type="range"
+              min="4"
+              max="24"
+              step="1"
+              bind:value={zoom}
+              aria-label="Preview zoom"
+            />
+            <output for="lab-zoom" class="mono">{zoom}×</output>
+            <button
+              class="zoom-button"
+              aria-label="Zoom in"
+              disabled={zoom >= 24}
+              onclick={() => changeZoom(zoom + 2)}>+</button
+            >
+            <button
+              class="zoom-button"
+              aria-label="Reset zoom"
+              title="Reset to 14×"
+              onclick={() => (zoom = DEFAULT_ZOOM)}>↺</button
+            >
+          </div>
         </div>
         <div class="canvas" class:dark={surface === 'dark'} style:color>
-          <div class="drawing" class:gridded={grid} class:guided={guides}>
-            <span class="axis horizontal" aria-hidden="true"></span><span
-              class="axis vertical"
-              aria-hidden="true"
-            ></span>
-            <div data-testid="main-study">
-              <StaticIconPreview
-                icon={selectedIcon}
-                {rotation}
-                {kind}
-                x={sizeX}
-                y={sizeY}
-                {color}
-                strokeWidth={stroke}
-                label={iconName + ' ' + kind + ' preview'}
-                onmeasure={measure}
-              />
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions (The scrollable drawing needs keyboard focus and arrow-key panning across browsers.) -->
+          <div
+            class="zoom-viewport"
+            role="region"
+            aria-label="Zoomed icon preview"
+            tabindex="0"
+            onkeydown={panPreview}
+          >
+            <div
+              class="zoom-surface"
+              style:--preview-size={`${previewSize}px`}
+              style:--grid-step={`${zoom}px`}
+            >
+              <div class="drawing" class:gridded={grid} class:guided={guides}>
+                <span class="axis horizontal" aria-hidden="true"></span><span
+                  class="axis vertical"
+                  aria-hidden="true"
+                ></span>
+                <div data-testid="main-study">
+                  <StaticIconPreview
+                    icon={selectedIcon}
+                    {rotation}
+                    {kind}
+                    x={sizeX}
+                    y={sizeY}
+                    {color}
+                    strokeWidth={stroke}
+                    label={iconName + ' ' + kind + ' preview'}
+                    size={previewSize}
+                    onmeasure={measure}
+                  />
+                </div>
+                {#if guides}<span class="spacing top mono" data-testid="spacing-top"
+                    >{spacing(margins.top)}</span
+                  ><span class="spacing bottom mono" data-testid="spacing-bottom"
+                    >{spacing(margins.bottom)}</span
+                  ><span class="spacing left mono" data-testid="spacing-left"
+                    >{spacing(margins.left)}</span
+                  ><span class="spacing right mono" data-testid="spacing-right"
+                    >{spacing(margins.right)}</span
+                  >{/if}
+              </div>
             </div>
-            {#if guides}<span class="spacing top mono" data-testid="spacing-top"
-                >{spacing(margins.top)}</span
-              ><span class="spacing bottom mono" data-testid="spacing-bottom"
-                >{spacing(margins.bottom)}</span
-              ><span class="spacing left mono" data-testid="spacing-left"
-                >{spacing(margins.left)}</span
-              ><span class="spacing right mono" data-testid="spacing-right"
-                >{spacing(margins.right)}</span
-              >{/if}
           </div>
           <div class="canvas-status">
             <span class="status-dot"></span>{kind === 'outline' ? 'Outline' : 'Filled'}<span
@@ -835,14 +905,40 @@
     display: flex;
     justify-content: space-between;
     font-size: 12px;
+    align-items: center;
+    gap: 16px;
   }
   .canvas-topline b {
     font-weight: 500;
   }
-  .canvas-topline > .mono {
-    font-size: 10px;
-    color: #a1a1aa;
-    align-self: center;
+  .zoom-tools {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .zoom-tools label {
+    font-size: 11px;
+    color: #71717a;
+    margin-right: 2px;
+  }
+  .zoom-tools input {
+    width: 88px;
+  }
+  .zoom-tools output {
+    font-size: 11px;
+    color: #6366f1;
+    min-width: 27px;
+    text-align: center;
+  }
+  .zoom-button {
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid #e4e4e7;
+    border-radius: 5px;
+    background: white;
+    color: #71717a;
+    font-size: 14px;
   }
   .canvas {
     flex: 1;
@@ -850,17 +946,35 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 54px;
-    padding: 58px 48px 30px;
-    background: #fff;
+    background: white;
+  }
+  .zoom-viewport {
+    display: flex;
+    width: 100%;
+    flex: 1;
+    height: 0;
+    min-height: 420px;
+    overflow: auto;
+    overscroll-behavior: contain;
+  }
+  .zoom-viewport:focus-visible {
+    outline: 2px solid #818cf8;
+    outline-offset: -3px;
+  }
+  .zoom-surface {
+    flex: none;
+    margin: auto;
+    width: calc(var(--preview-size) + 112px);
+    height: calc(var(--preview-size) + 100px);
+    display: grid;
+    place-items: center;
   }
   .canvas.dark {
     background: #1c1c22;
   }
   .drawing {
-    width: 168px;
-    height: 168px;
+    width: var(--preview-size);
+    height: var(--preview-size);
     display: grid;
     place-items: center;
     position: relative;
@@ -871,7 +985,7 @@
     background-image:
       linear-gradient(to right, #a5b4fc24 1px, transparent 1px),
       linear-gradient(to bottom, #a5b4fc24 1px, transparent 1px);
-    background-size: 7px 7px;
+    background-size: var(--grid-step) var(--grid-step);
     background-position: center;
   }
   .axis {
@@ -893,7 +1007,7 @@
   }
   .spacing {
     position: absolute;
-    font-size: 10px;
+    font-size: 12px;
     color: #92929e;
     line-height: 1;
     font-variant-numeric: tabular-nums;
@@ -914,6 +1028,8 @@
     color: #a5b4fc;
   }
   .canvas-status {
+    padding: 14px 22px 24px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 7px;

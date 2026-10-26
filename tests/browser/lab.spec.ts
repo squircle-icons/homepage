@@ -401,3 +401,57 @@ test('switching styles preserves control space and preview position for every ic
     }
   }
 });
+
+test('preview zoom enlarges inspection without changing artwork or actual-size samples', async ({
+  page,
+}, info) => {
+  await page.goto('/lab');
+  await page.getByRole('button', { name: 'Select camera', exact: true }).click();
+  const svg = main(page).locator('svg');
+  const zoom = page.getByRole('slider', { name: 'Preview zoom', exact: true });
+  const margins = await page.getByTestId('vertical-spacing').innerText();
+  const geometry = await main(page).locator('path').first().getAttribute('d');
+  await expect(zoom).toHaveValue('14');
+  await expect(svg).toHaveAttribute('width', '336');
+  await page.getByRole('button', { name: 'Zoom in', exact: true }).click();
+  await expect(zoom).toHaveValue('16');
+  await page.getByRole('button', { name: 'Zoom out', exact: true }).click();
+  await expect(zoom).toHaveValue('14');
+  await zoom.fill('24');
+  await expect(svg).toHaveAttribute('width', '576');
+  await expect(page.getByRole('button', { name: 'Zoom in', exact: true })).toBeDisabled();
+  await expect(page.getByTestId('vertical-spacing')).toHaveText(margins);
+  await expect(main(page).locator('path').first()).toHaveAttribute('d', geometry!);
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('100');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('100');
+  expect(
+    await page
+      .getByRole('region', { name: 'Camera optical sizes' })
+      .locator('svg')
+      .evaluateAll((elements) => elements.map((element) => element.getAttribute('width'))),
+  ).toEqual(['16', '20', '24', '48']);
+  expect(await page.getByTestId('style-outline').locator('svg').getAttribute('width')).toBe('72');
+  await page.getByRole('button', { name: 'Filled', exact: true }).click();
+  await expect(svg).toHaveAttribute('width', '576');
+  await expect(zoom).toHaveValue('24');
+  await page.getByRole('button', { name: 'Outline', exact: true }).click();
+  if (info.project.name === 'chromium')
+    await page.screenshot({ path: '.artifacts/previews/lab-zoom-camera.png', fullPage: true });
+  await zoom.fill('4');
+  await expect(svg).toHaveAttribute('width', '96');
+  await expect(page.getByRole('button', { name: 'Zoom out', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Reset zoom', exact: true }).click();
+  await expect(zoom).toHaveValue('14');
+  await page.getByRole('button', { name: 'Select folder', exact: true }).click();
+  await expect(zoom).toHaveValue('14');
+  await page.setViewportSize({ width: 1100, height: 900 });
+  await zoom.fill('24');
+  const viewport = page.getByRole('region', { name: 'Zoomed icon preview', exact: true });
+  expect(await viewport.evaluate((element) => element.scrollWidth > element.clientWidth)).toBe(
+    true,
+  );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await viewport.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => viewport.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+});
