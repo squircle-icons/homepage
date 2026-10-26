@@ -53,6 +53,12 @@
           >import &#123; Camera &#125; from 'squircle-icons-svelte'</code
         >. A production bundle check verifies that unused icons are removed.
       </p>
+      <p>
+        All six have a Filled entry point, such as <code
+          >import Camera from 'squircle-icons-svelte/filled/camera'</code
+        >. These are separate solid drawings. Only Filled Folder uses <code>strokeWidth</code> to adjust
+        its internal gap; the other Filled variants have fixed geometry.
+      </p>
     </section>
     <section id="props">
       <span class="section-number mono">03 / THE API</span>
@@ -174,8 +180,9 @@
         changing the data model or adapter.
       </p>
       <p class="callout">
-        Next decision: review the six silhouettes and motion studies before adding more icons or
-        another framework. The final package name is still open; the project uses the MIT license.
+        Next decision: review the five new Outline/Filled pairs in the Lab before adding more icons
+        or another framework. The final package name is still open; the project uses the MIT
+        license.
       </p>
     </section>
   </div>

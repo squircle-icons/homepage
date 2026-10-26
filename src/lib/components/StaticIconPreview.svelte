@@ -16,14 +16,15 @@
 
 <script lang="ts">
   import { tick } from 'svelte';
+  import { visibleBounds } from '#lib/visible-bounds.js';
   import { catalog } from '#lib/catalog.js';
-  import FilledFolder from 'squircle-icons-svelte/filled/folder';
 
   let {
     icon = 'folder',
     kind = 'outline',
     x = 100,
     y = 100,
+    rotation = 0,
     strokeWidth = 1.7,
     size = 168,
     color = 'currentColor',
@@ -34,6 +35,7 @@
     kind?: 'outline' | 'filled';
     x?: number;
     y?: number;
+    rotation?: number;
     strokeWidth?: number;
     size?: number;
     color?: string;
@@ -43,7 +45,9 @@
   let host = $state<HTMLDivElement>();
   let centerX = $state(12);
   let centerY = $state(12);
-  const Icon = $derived((catalog.find((entry) => entry.name === icon) ?? catalog[0]).component);
+  const entry = $derived(catalog.find((entry) => entry.name === icon) ?? catalog[0]);
+  const Icon = $derived(entry.component);
+  const FilledIcon = $derived(entry.filledComponent);
 
   $effect(() => {
     icon;
@@ -52,6 +56,7 @@
     centerY;
     x;
     y;
+    rotation;
     strokeWidth;
     size;
     if (!host) return;
@@ -60,10 +65,9 @@
       if (!active) return;
       const svg = host?.querySelector('svg');
       if (!svg) return;
-      const box = svg.getBBox();
       const half = kind === 'outline' ? strokeWidth / 2 : 0;
       // Individual source shapes have no transforms; parent preview scaling
-      // is excluded from their local getBBox, so limits follow real geometry.
+      // is excluded from local getBBox, giving untransformed reference bounds.
       const sources = Array.from(svg.querySelectorAll<SVGGraphicsElement>('path, circle')).map(
         (shape) => shape.getBBox(),
       );
@@ -83,7 +87,9 @@
         centerY = nextCenterY;
         return;
       }
-      onmeasure?.({
+      if (!onmeasure) return;
+      const box = visibleBounds(svg);
+      onmeasure({
         icon,
         variant: kind,
         gap:
@@ -112,11 +118,17 @@
   bind:this={host}
   style:--offset-x={`${((12 - centerX) * x) / 100}px`}
   style:--offset-y={`${((12 - centerY) * y) / 100}px`}
+  style:--rotation={`${rotation % 360}deg`}
   style:--scale-x={x / 100}
   style:--scale-y={y / 100}
   style:--preview-stroke={`${(strokeWidth * size) / 24}px`}
 >
-  {#if kind === 'outline'}<Icon {size} {color} {strokeWidth} {label} />{:else}<FilledFolder
+  {#if kind === 'outline'}<Icon
+      {size}
+      {color}
+      {strokeWidth}
+      {label}
+    />{:else if FilledIcon}<FilledIcon
       {size}
       {color}
       strokeWidth={strokeWidth / (y / 100)}
@@ -130,10 +142,14 @@
     place-items: center;
     line-height: 0;
   }
+  .glyph :global(svg) {
+    overflow: visible;
+  }
   .glyph :global(svg > g) {
     transform-box: view-box;
     transform-origin: 12px 12px;
-    transform: translate(var(--offset-x), var(--offset-y)) scale(var(--scale-x), var(--scale-y));
+    transform: rotate(var(--rotation)) translate(var(--offset-x), var(--offset-y))
+      scale(var(--scale-x), var(--scale-y));
   }
   /* Preserve the chosen stroke in screen pixels when X/Y scale independently.
      Include the preview magnification, so the same 24-unit weight is visible

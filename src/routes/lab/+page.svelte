@@ -12,23 +12,24 @@
       stroke: number;
       x: number;
       y: number;
-      linked: boolean;
+      rotation: number;
       checked: string[];
     }
   >();
   function selectIcon(name: string) {
     if (name === selectedIcon) return;
-    drafts.set(selectedIcon, { kind, stroke, x: sizeX, y: sizeY, linked, checked: [...checked] });
+    drafts.set(selectedIcon, { kind, stroke, x: sizeX, y: sizeY, rotation, checked: [...checked] });
     const draft = drafts.get(name);
     selectedIcon = name;
     kind = draft?.kind ?? 'outline';
     stroke = draft?.stroke ?? strokeWeights.regular;
     sizeX = draft?.x ?? 100;
     sizeY = draft?.y ?? 100;
-    linked = draft?.linked ?? false;
+    rotation = draft?.rotation ?? 0;
     checked = draft?.checked ?? [];
   }
   let kind = $state<'outline' | 'filled'>('outline');
+  const adjustableWeight = $derived(kind === 'outline' || entry.filledDefaultStrokeWidth !== null);
   let surface = $state<'light' | 'dark'>('light');
   let ink = $state<'ink' | 'indigo'>('ink');
   let grid = $state(true);
@@ -36,7 +37,7 @@
   let stroke = $state<number>(strokeWeights.regular);
   let sizeX = $state(100);
   let sizeY = $state(100);
-  let linked = $state(false);
+  let rotation = $state(0);
   let checked = $state<string[]>([]);
   let margins = $state<Margins>({
     icon: 'folder',
@@ -59,57 +60,22 @@
         ? '#f4f4f5'
         : '#27272a',
   );
-  const lineWeight = $derived(kind === 'outline' ? stroke : 0);
-  const maximumX = $derived(((24 - lineWeight) / margins.sourceWidth) * 100);
-  const maximumY = $derived((margins.sourceWidth * sizeX) / margins.sourceHeight);
-  const gridMaximumY = $derived(((24 - lineWeight) / margins.sourceHeight) * 100);
-  const limit = (axis: 'x' | 'y') => (axis === 'x' ? maximumX : maximumY);
-  const bounded = (value: number, max: number) =>
-    Math.min(max, Math.max(1, Number.isFinite(value) ? value : 100));
   function resize(axis: 'x' | 'y', value: number) {
-    if (margins.variant !== kind || margins.icon !== selectedIcon) return;
-    if (linked) {
-      const requested = (Number.isFinite(value) ? value : 100) / (axis === 'x' ? sizeX : sizeY);
-      const ratio = Math.min(
-        maximumX / sizeX,
-        gridMaximumY / sizeY,
-        Math.max(1 / sizeX, 1 / sizeY, requested),
-      );
-      sizeX *= ratio;
-      sizeY *= ratio;
-      return;
-    }
-    if (axis === 'x') {
-      sizeX = bounded(value, maximumX);
-      sizeY = Math.min(sizeY, (margins.sourceWidth * sizeX) / margins.sourceHeight);
-    } else sizeY = bounded(value, maximumY);
+    if (!Number.isFinite(value) || value < 1) return;
+    if (axis === 'x') sizeX = value;
+    else sizeY = value;
   }
   function matchLeft() {
     if (margins.variant !== kind || margins.icon !== selectedIcon) return;
-    linked = false;
-    sizeY = maximumY;
+    sizeY = (margins.sourceWidth * sizeX) / margins.sourceHeight;
   }
-  // Changing style/weight can change the available space. Clamp from measured
-  // source bounds, rather than imposing a shared percentage ceiling.
-  $effect(() => {
-    if (margins.variant !== kind || margins.icon !== selectedIcon) return;
-    const nextX = bounded(sizeX, maximumX);
-    const nextY = bounded(sizeY, (margins.sourceWidth * nextX) / margins.sourceHeight);
-    if (Math.abs(nextX - sizeX) > 0.000001 || Math.abs(nextY - sizeY) > 0.000001) {
-      if (linked && (nextX < sizeX || nextY < sizeY)) {
-        const ratio = Math.min(nextX / sizeX, nextY / sizeY);
-        sizeX *= ratio;
-        sizeY *= ratio;
-      } else {
-        sizeX = nextX;
-        sizeY = nextY;
-      }
-    }
-  });
+  function rotate(value: number) {
+    if (Number.isFinite(value)) rotation = value;
+  }
   function reset() {
     sizeX = sizeY = 100;
     stroke = strokeWeights.regular;
-    linked = false;
+    rotation = 0;
   }
   function measure(value: Margins) {
     margins = value;
@@ -153,40 +119,44 @@
             >
           </div>
         </fieldset>
-        <div class="setting">
-          <label class="field-label range-label" for="lab-stroke"
-            >Stroke width <output>{stroke.toFixed(2)}</output></label
-          >
-          <div class="segmented weight-presets" aria-label="Stroke weight">
-            {#each [{ name: 'Thin', value: strokeWeights.thin }, { name: 'Regular', value: strokeWeights.regular }, { name: 'Bold', value: strokeWeights.bold }] as weight}
-              <button
-                aria-pressed={Math.abs(stroke - weight.value) < 0.00001}
-                title={weight.name === 'Regular' ? 'Default · 1.70' : weight.value.toFixed(2)}
-                onclick={() => (stroke = weight.value)}>{weight.name}</button
-              >
-            {/each}
-          </div>
-          <div class="stroke-control">
-            <button
-              class="small-button"
-              aria-label="Decrease stroke width"
-              disabled={stroke <= 1}
-              onclick={() => (stroke = Math.max(1, +(stroke - 0.25).toFixed(2)))}>−</button
-            ><input
-              id="lab-stroke"
-              type="range"
-              min="1"
-              max="2.5"
-              step="0.05"
-              bind:value={stroke}
-            /><button
-              class="small-button"
-              aria-label="Increase stroke width"
-              disabled={stroke >= 2.5}
-              onclick={() => (stroke = Math.min(2.5, +(stroke + 0.25).toFixed(2)))}>+</button
+        {#if adjustableWeight}
+          <div class="setting">
+            <label class="field-label range-label" for="lab-stroke"
+              >Stroke width <output>{stroke.toFixed(2)}</output></label
             >
+            <div class="segmented weight-presets" aria-label="Stroke weight">
+              {#each [{ name: 'Thin', value: strokeWeights.thin }, { name: 'Regular', value: strokeWeights.regular }, { name: 'Bold', value: strokeWeights.bold }] as weight}
+                <button
+                  aria-pressed={Math.abs(stroke - weight.value) < 0.00001}
+                  title={weight.name === 'Regular' ? 'Default · 1.70' : weight.value.toFixed(2)}
+                  onclick={() => (stroke = weight.value)}>{weight.name}</button
+                >
+              {/each}
+            </div>
+            <div class="stroke-control">
+              <button
+                class="small-button"
+                aria-label="Decrease stroke width"
+                disabled={stroke <= 1}
+                onclick={() => (stroke = Math.max(1, +(stroke - 0.25).toFixed(2)))}>−</button
+              ><input
+                id="lab-stroke"
+                type="range"
+                min="1"
+                max="2.5"
+                step="0.05"
+                bind:value={stroke}
+              /><button
+                class="small-button"
+                aria-label="Increase stroke width"
+                disabled={stroke >= 2.5}
+                onclick={() => (stroke = Math.min(2.5, +(stroke + 0.25).toFixed(2)))}>+</button
+              >
+            </div>
           </div>
-        </div>
+        {:else}<div class="setting">
+            <span class="field-label">Fill</span><span class="solid-note">Solid geometry</span>
+          </div>{/if}
         <div class="size-section">
           <div class="size-heading">
             <span class="field-label">Shape size</span><span class="unit">%</span>
@@ -204,26 +174,56 @@
                 type="number"
                 aria-label={item.name}
                 min="1"
-                max={limit(item.axis)}
                 step="0.01"
                 value={Math.floor((item.value + 0.00000001) * 100) / 100}
-                onchange={(event) => resize(item.axis, Number(event.currentTarget.value))}
+                onchange={(event) => {
+                  resize(item.axis, Number(event.currentTarget.value));
+                  event.currentTarget.value = String(item.axis === 'x' ? sizeX : sizeY);
+                }}
               /><button
                 class="small-button"
                 aria-label={'Increase size ' + item.axis.toUpperCase()}
-                onclick={() => resize(item.axis, item.value + 5)}
-                disabled={item.value >= limit(item.axis) - 0.000001}>+</button
+                onclick={() => resize(item.axis, item.value + 5)}>+</button
               >
             </div>{/each}
-          <label class="checkbox-row"
-            ><input type="checkbox" bind:checked={linked} /> Link X/Y proportions</label
-          >
-          <button class="match-spacing" onclick={matchLeft}
+          <button
+            class="match-spacing"
+            onclick={matchLeft}
+            disabled={rotation % 180 !== 0}
+            title="Match spacing at 0° or 180°"
             >Match Y to left spacing <span aria-hidden="true">↔</span></button
           >
-          <p class="hint" data-testid="y-limit">
-            Y up to {maximumY.toFixed(2)}% · top/bottom match the left margin.
-          </p>
+          <p class="hint">X and Y are independent. Artwork may extend beyond the grid.</p>
+          <div class="rotation-section">
+            <label class="field-label range-label" for="lab-rotation"
+              >Rotate <span class="unit">°</span></label
+            >
+            <div class="rotation-control">
+              <button
+                class="small-button"
+                aria-label="Rotate counterclockwise"
+                onclick={() => rotate(rotation - 15)}>−</button
+              >
+              <input
+                id="lab-rotation"
+                type="number"
+                aria-label="Rotation"
+                step="1"
+                value={rotation}
+                onchange={(event) => rotate(Number(event.currentTarget.value))}
+              />
+              <button
+                class="small-button"
+                aria-label="Rotate clockwise"
+                onclick={() => rotate(rotation + 15)}>+</button
+              >
+              <button
+                class="small-button"
+                aria-label="Reset rotation"
+                onclick={() => (rotation = 0)}>↺</button
+              >
+            </div>
+          </div>
         </div>
         <fieldset class="setting">
           <legend class="field-label">Surface</legend>
@@ -275,6 +275,7 @@
             <div data-testid="main-study">
               <StaticIconPreview
                 icon={selectedIcon}
+                {rotation}
                 {kind}
                 x={sizeX}
                 y={sizeY}
@@ -298,7 +299,7 @@
             <span class="status-dot"></span>{kind === 'outline' ? 'Outline' : 'Filled'}<span
               >{margins.width.toFixed(2)} × {margins.height.toFixed(2)} units</span
             >
-            {#if kind === 'filled'}<span data-testid="filled-gap"
+            {#if kind === 'filled' && margins.gap !== undefined}<span data-testid="filled-gap"
                 >Gap {(margins.gap ?? stroke).toFixed(2)} units</span
               >{/if}
           </div>
@@ -309,7 +310,13 @@
               class:balanced
               class="balance-state"
               data-testid="balance-state"
-              >{balanced ? 'Opposite sides balanced' : 'Review alignment'}</span
+              >{[margins.left, margins.right, margins.top, margins.bottom].some(
+                (value) => value < -0.00001,
+              )
+                ? 'Outside 24×24 grid'
+                : balanced
+                  ? 'Opposite sides balanced'
+                  : 'Review alignment'}</span
             >
           </div>
           <div class="spacing-values">
@@ -343,6 +350,7 @@
             <div>
               <StaticIconPreview
                 icon={selectedIcon}
+                {rotation}
                 {kind}
                 {size}
                 x={sizeX}
@@ -358,7 +366,7 @@
     <section class="comparison-section" aria-labelledby="style-heading">
       <div class="section-heading">
         <h2 id="style-heading">Compare styles</h2>
-        <span>Same scale and X/Y settings</span>
+        <span>Same scale, X/Y and rotation</span>
       </div>
       <div class="comparison-grid">
         {#each ['outline', 'filled'] as style}<article
@@ -367,11 +375,18 @@
           >
             <div class="comparison-heading">
               <h3>{style === 'outline' ? 'Outline' : 'Filled'}</h3>
-              <span>{style === 'outline' ? 'Adjustable stroke' : 'Adjustable inner gap'}</span>
+              <span
+                >{style === 'outline'
+                  ? 'Adjustable stroke'
+                  : entry.filledDefaultStrokeWidth !== null
+                    ? 'Adjustable inner gap'
+                    : 'Solid geometry'}</span
+              >
             </div>
             <div class="comparison-preview">
               {#if style === 'outline' || hasFilled}<StaticIconPreview
                   icon={selectedIcon}
+                  {rotation}
                   kind={style as 'outline' | 'filled'}
                   size={72}
                   x={sizeX}
@@ -439,6 +454,19 @@
 </div>
 
 <style>
+  .rotation-section {
+    margin-top: 18px;
+  }
+  .rotation-control {
+    display: grid;
+    grid-template-columns: 28px minmax(0, 1fr) 28px 28px;
+    gap: 8px;
+  }
+  .solid-note {
+    font-size: 12px;
+    color: #71717a;
+  }
+
   .lab-layout {
     display: grid;
     grid-template-columns: minmax(0, 1fr) 190px;
@@ -755,18 +783,6 @@
     text-align: left;
     display: flex;
     justify-content: space-between;
-  }
-  .checkbox-row {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: #71717a;
-    font-size: 11px;
-    cursor: pointer;
-    margin-top: 12px;
-  }
-  .checkbox-row input {
-    margin: 0;
   }
   .switch-row {
     display: flex;

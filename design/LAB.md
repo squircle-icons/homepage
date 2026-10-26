@@ -1,22 +1,24 @@
 # Static icon lab
 
-`/lab` is a desktop workbench for reviewing geometry using native exports from the pinned Svelte package. Motion work is paused; there is no app bar, timeline, or playback control.
+`/lab` is a desktop workbench for reviewing native exports from the pinned Svelte package. Motion work is paused; there is no app bar, timeline or playback control.
 
 ## Review flow
 
-1. Select an icon from the right sidebar. Folder Outline and Filled are owner-approved; the remaining five Outline icons await review. Filled is disabled until a separately authored variant exists. Each icon retains its current draft settings while switching within this page session.
-2. Select Thin (1.25), Regular / default (1.70), or Bold (2.25). The slider and step buttons retain fine adjustment. In Outline this controls line weight; in Filled Folder it controls the negative-space divider while the outside contour stays fixed.
-3. Adjust X/Y independently or link proportions. Values are percentages of the source. Reset restores 100% / 100% and Regular. The approved Folder's earlier Y=110% preview has been baked into its source, so its approved shape now displays at 100%.
-4. Use the left margin as the Y reference. The Y limit makes top/bottom equal left/right; “Match Y to left spacing” sets the exact value. X is limited by the artboard and stroke. Linked resizing preserves the current ratio within the artboard.
-5. Inspect measured spacing and actual-size 16/20/24/48px samples. Opposite sides match in pairs; horizontal and vertical padding may differ to preserve the object's proportions. At default size, approved Outline Folder has 2.150 horizontal and 3.450 vertical padding; Filled has 2.125 and 3.3375 respectively.
-6. Compare available styles on light/dark surfaces, with ink/indigo colors. The visual checklist and draft adjustments are session-only. They do not approve or rewrite source artwork.
+1. Select an icon in the right sidebar. All six have Outline and Filled variants. Folder is owner-approved; Camera, Bell, Heart, Search and Settings are new review pairs. Each icon retains its style, weight, X/Y, rotation and checklist while switching in this page session.
+2. Outline uses Thin (1.25), Regular / default (1.70) and Bold (2.25), plus fine adjustment. In Filled Folder these settings control its negative-space divider with a fixed outside contour. The other five filled studies use fixed solid geometry, so weight controls are hidden in their Filled view.
+3. X and Y are independent percentages of source geometry. There is no maximum, artboard cap, aspect lock or automatic resizing when changing style or weight. Positive values from 1% are supported. Artwork may extend beyond the 24×24 grid; negative spacing and “Outside 24×24 grid” report that state.
+4. Rotate around the artboard center using the degree field or ±15° buttons. Negative angles and multiple full turns are accepted. Rotation applies to the canvas, actual-size samples and style comparisons. Reset rotation returns to 0° without changing X/Y. Reset geometry restores X/Y=100%, Regular and 0°.
+5. “Match Y to left spacing” remains an explicit convenience at 0°/180°. It changes Y once, without locking either axis. At other angles it is disabled because rotated asymmetric contours do not have the same spacing relationship.
+6. Inspect measured margins and 16/20/24/48px samples on light/dark surfaces in ink/indigo. The checklist and draft adjustments are session-only and do not approve or rewrite source drawings.
 
-Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/DESIGN_RULES.md). New approved geometry must be authored in core and synchronized through Svelte into homepage.
+The approved Folder's previous Y=110% preview was baked into its source. It now displays at 100%. Default Outline padding is 2.150 horizontal / 3.450 vertical; Filled padding is 2.125 / 3.3375. Opposite pairs may differ to preserve the object's proportions. After rotation, asymmetric silhouettes can have unequal bounding-box margins even though the rotation center remains fixed.
+
+Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/DESIGN_RULES.md). Approved changes must be authored in core and synchronized through Svelte into homepage.
 
 ## Preview ownership
 
-`StaticIconPreview.svelte` renders package exports without copying paths. It centers native artwork bounds and applies X/Y transforms only in the preview. Outline paths use non-scaling strokes including display magnification. Filled Folder's validated counter compensates for Y scaling to retain the chosen gap; at extreme heights the source gap is bounded to 0.25–6 units and the readout reports the actual gap. Source measurements happen after mount/update through a cancelable tick. There are no motion controllers or media-query listeners.
+`StaticIconPreview.svelte` renders package exports without copying paths. It centers unrotated native bounds, scales independently, then rotates around 12,12. Outline paths use non-scaling strokes including preview magnification. Filled Folder compensates its counter for Y scaling; its source counter is bounded to 0.25–6 units and the actual displayed gap is reported. Other filled counters are authored geometry, with no outside stroke. Rotated circles use analytic ellipse bounds; paths use arc-length samples with local extremum refinement to measure the visible curves rather than transformed rectangles. Measurements are preview diagnostics, rounded to 0.001 drawing units. Source measurements happen after mount/update through a cancelable tick. No motion controllers or media-query listeners are used.
 
 ## Verification
 
-Run `pnpm verify`. Nine Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual-size samples, independent and linked sizing, balanced margins, geometry-derived limits, filled counters, presets and fine adjustment, sidebar switching and per-icon drafts, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.
+Run `pnpm verify`. Eleven Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual sizes, free independent X/Y above former limits, explicit spacing matching, filled counters, weight presets, all six review pairs, per-icon drafts, positive/negative/full-turn rotation, margin measurement, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.

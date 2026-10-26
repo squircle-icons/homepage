@@ -131,6 +131,7 @@ test('filled Folder gap follows stroke width without changing the outer silhouet
   await expect(page.getByTestId('vertical-spacing')).toHaveText('3.338 / 3.338');
   await size(page, 'X', 80);
   await size(page, 'Y', 115);
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('115');
   await balanced(page);
   if (info.project.name === 'chromium')
     await page.screenshot({ path: '.artifacts/previews/lab-static-filled.png', fullPage: true });
@@ -140,25 +141,29 @@ test('filled Folder gap follows stroke width without changing the outer silhouet
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 });
 
-test('linked axes clamp together, step with buttons and reset cleanly', async ({ page }) => {
+test('X and Y are independent without artboard or aspect-ratio caps', async ({ page }) => {
   await page.goto('/lab');
-  await page.getByLabel('Link X/Y proportions').check();
+  await expect(page.getByLabel('Link X/Y proportions')).toHaveCount(0);
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).not.toHaveAttribute(
+    'max',
+    /.+/,
+  );
+  await size(page, 'X', 180);
+  await size(page, 'Y', 250);
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('180');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('250');
+  await expect(page.getByTestId('balance-state')).toHaveText('Outside 24×24 grid');
   await page.getByRole('button', { name: 'Increase size X', exact: true }).click();
-  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('105');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('105');
-  await size(page, 'X', 500);
-  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('123.88');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('123.88');
-  await expect(page.getByRole('button', { name: 'Increase size X', exact: true })).toBeDisabled();
-  await size(page, 'Y', -50);
-  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('1');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('1');
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('185');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('250');
+  await page.getByRole('button', { name: 'Filled', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('185');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('250');
+  await size(page, 'X', 70);
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('250');
   await page.getByRole('button', { name: /Reset geometry/ }).click();
-  await expect(page.getByLabel('Link X/Y proportions')).not.toBeChecked();
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('100');
-  await page.getByRole('button', { name: 'Decrease size Y', exact: true }).focus();
-  await page.keyboard.press('Enter');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('95');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('100');
   await balanced(page);
 });
 
@@ -199,29 +204,21 @@ test('opposite visible margins stay balanced across styles, stroke weights and n
   }
 });
 
-test('Y sizing follows the measured left margin instead of a fixed percentage cap', async ({
-  page,
-}) => {
+test('matching left spacing is an explicit action and never locks Y', async ({ page }) => {
   await page.goto('/lab');
-  await size(page, 'Y', 116);
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('116');
-  await expect(page.getByTestId('y-limit')).toContainText('116.88%');
+  await size(page, 'Y', 160);
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('160');
   await page.getByRole('button', { name: 'Match Y to left spacing' }).click();
   await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('116.88');
   await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.150 / 2.150');
   await expect(page.getByTestId('vertical-spacing')).toHaveText('2.150 / 2.150');
-  await expect(page.getByRole('button', { name: 'Increase size Y', exact: true })).toBeDisabled();
-  await size(page, 'X', 80);
-  await expect(page.getByTestId('horizontal-spacing')).toHaveText('3.950 / 3.950');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.950 / 3.950');
-  await page.getByRole('button', { name: 'Filled', exact: true }).click();
-  await expect(page.getByTestId('y-limit')).toContainText('91.20%');
-  await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.100 / 4.100');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.100 / 4.100');
-  await size(page, 'X', 120);
-  await page.getByRole('button', { name: 'Outline', exact: true }).click();
-  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('120');
-  await balanced(page);
+  await page.getByRole('button', { name: 'Increase size Y', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('121.88');
+  await size(page, 'X', 60);
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('121.88');
+  await size(page, 'Y', 95);
+  await page.getByRole('button', { name: 'Bold', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('95');
 });
 
 test('stroke presets share Regular 1.70 as default while retaining fine adjustment', async ({
@@ -267,7 +264,7 @@ test('stroke presets share Regular 1.70 as default while retaining fine adjustme
   );
 });
 
-test('right sidebar switches native icons and preserves independent review drafts', async ({
+test('right sidebar exposes all review pairs and preserves independent drafts', async ({
   page,
 }) => {
   await page.goto('/lab');
@@ -285,8 +282,11 @@ test('right sidebar switches native icons and preserves independent review draft
       icon[0].toUpperCase() + icon.slice(1) + ' lab',
     );
     await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '1.7');
-    await expect(page.getByRole('button', { name: 'Filled', exact: true })).toBeDisabled();
-    await expect(page.getByText('Filled study not drawn yet')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Filled', exact: true })).toBeEnabled();
+    await page.getByRole('button', { name: 'Filled', exact: true }).click();
+    await expect(main(page).locator('svg')).toHaveAttribute('stroke', 'none');
+    await expect(page.getByText('Solid geometry', { exact: true }).first()).toBeVisible();
+    await expect(page.getByRole('slider', { name: 'Stroke width' })).toHaveCount(0);
     await balanced(page);
   }
   await sidebar.getByRole('button', { name: 'Select folder', exact: true }).click();
@@ -300,4 +300,69 @@ test('right sidebar switches native icons and preserves independent review draft
     'true',
   );
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+});
+
+test('rotation affects canvas, samples and comparisons without changing X/Y or stroke', async ({
+  page,
+}, info) => {
+  await page.goto('/lab');
+  await page.getByRole('button', { name: 'Rotate clockwise', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Rotation', exact: true })).toHaveValue('15');
+  await page.getByRole('button', { name: 'Rotate counterclockwise', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Rotation', exact: true })).toHaveValue('0');
+  const rotation = page.getByRole('spinbutton', { name: 'Rotation', exact: true });
+  await rotation.fill('90');
+  await rotation.press('Tab');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('3.450 / 3.450');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('2.150 / 2.150');
+  await balanced(page);
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('100');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('100');
+  await rotation.fill('-45');
+  await rotation.press('Tab');
+  const transforms = await page
+    .locator('.glyph svg > g')
+    .evaluateAll((elements) => elements.map((element) => getComputedStyle(element).transform));
+  expect(new Set(transforms).size).toBe(1);
+  expect(transforms[0]).not.toBe('none');
+  await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '1.7');
+  if (info.project.name === 'chromium')
+    await page.screenshot({ path: '.artifacts/previews/lab-rotated.png', fullPage: true });
+  await rotation.fill('450');
+  await rotation.press('Tab');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('3.450 / 3.450');
+  await page.getByRole('button', { name: 'Select camera', exact: true }).click();
+  await expect(rotation).toHaveValue('0');
+  await page.getByRole('button', { name: 'Select folder', exact: true }).click();
+  await expect(rotation).toHaveValue('450');
+  await page.getByRole('button', { name: 'Filled', exact: true }).click();
+  await expect(page.getByTestId('filled-gap')).toHaveText('Gap 1.70 units');
+  await page.getByRole('button', { name: 'Reset rotation', exact: true }).click();
+  await expect(rotation).toHaveValue('0');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
+  await rotation.fill('30');
+  await rotation.press('Tab');
+  await page.getByRole('button', { name: /Reset geometry/ }).click();
+  await expect(rotation).toHaveValue('0');
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
+});
+
+test('rotated circular geometry has tight visible margins rather than a rotated rectangular box', async ({
+  page,
+}) => {
+  await page.goto('/lab');
+  await page.getByRole('button', { name: 'Select search', exact: true }).click();
+  await page.getByRole('spinbutton', { name: 'Rotation', exact: true }).fill('45');
+  await page.getByRole('spinbutton', { name: 'Rotation', exact: true }).press('Tab');
+  // Circle (10,10), r=6.7 rotates around (12,12): its x extent is still r.
+  // Handle endpoint (20.7,20.7) rotates to (12, 12+8.7*sqrt(2)).
+  const horizontal = (await page.getByTestId('horizontal-spacing').innerText())
+    .split('/')
+    .map(Number);
+  const vertical = (await page.getByTestId('vertical-spacing').innerText()).split('/').map(Number);
+  expect(horizontal[0]).toBeCloseTo(12 - 6.7 - 0.85, 3);
+  expect(horizontal[1]).toBeCloseTo(12 - 6.7 - 0.85, 3);
+  expect(vertical[0]).toBeCloseTo(12 - 2 * Math.SQRT2 - 6.7 - 0.85, 2);
+  expect(vertical[1]).toBeCloseTo(12 - 8.7 * Math.SQRT2 - 0.85, 2);
+  await expect(page.getByTestId('balance-state')).toHaveText('Outside 24×24 grid');
 });

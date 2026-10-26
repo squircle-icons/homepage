@@ -5,6 +5,12 @@ import Folder from 'squircle-icons-svelte/folder';
 import Heart from 'squircle-icons-svelte/heart';
 import Search from 'squircle-icons-svelte/search';
 import Settings from 'squircle-icons-svelte/settings';
+import BellFilled from 'squircle-icons-svelte/filled/bell';
+import CameraFilled from 'squircle-icons-svelte/filled/camera';
+import FolderFilled from 'squircle-icons-svelte/filled/folder';
+import HeartFilled from 'squircle-icons-svelte/filled/heart';
+import SearchFilled from 'squircle-icons-svelte/filled/search';
+import SettingsFilled from 'squircle-icons-svelte/filled/settings';
 export const catalog = [
   {
     ...{
@@ -13,13 +19,14 @@ export const catalog = [
       tags: ['notification', 'alert'],
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
-        'Original bell shoulder curve transitions into nearly vertical walls. Broad lower lip balances the narrow crown.',
-      styles: ['outline'],
+        'One continuous silhouette integrates the top hanger to avoid doubled seams. Straight side walls meet softened shoulders and a straight lower lip; the separate clapper remains recognizable. Vertical bounds y=2.5..21.5 are centered. Review study; not owner-approved.',
+      styles: ['outline', 'filled'],
       defaultStrokeWidth: 1.7,
       filledDefaultStrokeWidth: null,
       reviewStatus: 'draft',
     },
     component: Bell,
+    filledComponent: BellFilled,
   },
   {
     ...{
@@ -28,13 +35,14 @@ export const catalog = [
       tags: ['photo', 'image'],
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
-        'Original Bézier body: shoulders taper into a raised shutter housing; lens is optically lowered to 12.9.',
-      styles: ['outline'],
+        'Rounded rectangular body uses the Folder corner rhythm, straight shoulder ledges and a raised housing. Circular lens stays circular; its center is lowered to y=13.2. Source bounds x=3..21 and y=4.1..19.9 balance opposite margins. Review study; not owner-approved.',
+      styles: ['outline', 'filled'],
       defaultStrokeWidth: 1.7,
       filledDefaultStrokeWidth: null,
       reviewStatus: 'draft',
     },
     component: Camera,
+    filledComponent: CameraFilled,
   },
   {
     ...{
@@ -59,6 +67,7 @@ export const catalog = [
       reviewStatus: 'approved',
     },
     component: Folder,
+    filledComponent: FolderFilled,
   },
   {
     ...{
@@ -67,13 +76,14 @@ export const catalog = [
       tags: ['love', 'favorite'],
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
-        'Original symmetric lobes with a shallow notch and curved lower point; no rounded-square frame.',
-      styles: ['outline'],
+        'Broad, gently squared lobe shoulders and short upright sections carry the rounded rectangle grammar without losing the heart notch and soft point. Bounds x=3.25..20.75, y=4.1..19.9 are centered. Review study; not owner-approved.',
+      styles: ['outline', 'filled'],
       defaultStrokeWidth: 1.7,
       filledDefaultStrokeWidth: null,
       reviewStatus: 'draft',
     },
     component: Heart,
+    filledComponent: HeartFilled,
   },
   {
     ...{
@@ -82,13 +92,14 @@ export const catalog = [
       tags: ['find', 'magnify'],
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
-        'Original construction from a circle centered at 10.4 and a 45-degree handle. Circular geometry preserves immediate recognition.',
-      styles: ['outline'],
+        'The circular lens is an intentional silhouette exception. A single 45-degree handle meets the circle at its centerline, with a rounded free end. Combined centerline bounds x/y=3.3..20.7 balance the grid. Review study; not owner-approved.',
+      styles: ['outline', 'filled'],
       defaultStrokeWidth: 1.7,
       filledDefaultStrokeWidth: null,
       reviewStatus: 'draft',
     },
     component: Search,
+    filledComponent: SearchFilled,
   },
   {
     ...{
@@ -97,13 +108,14 @@ export const catalog = [
       tags: ['preferences', 'gear'],
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
-        'Original six-tooth outline with Bézier shoulders. The gear stays recognizable rather than forcing a squircle silhouette.',
-      styles: ['outline'],
+        'Six original radial teeth use straight faces with individually rounded transitions. The recognizable gear is a silhouette exception to the rounded rectangle baseline. Opposite teeth are constructed in symmetric pairs about 12,12; the circular hub remains circular. Review study; not owner-approved.',
+      styles: ['outline', 'filled'],
       defaultStrokeWidth: 1.7,
       filledDefaultStrokeWidth: null,
       reviewStatus: 'draft',
     },
     component: Settings,
+    filledComponent: SettingsFilled,
   },
 ];
 export const strokeWeights = { thin: 1.25, regular: 1.7, bold: 2.25 };

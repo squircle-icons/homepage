@@ -10,6 +10,7 @@ const icons: {
   tags: string[];
   authorship: string;
   construction: string;
+  styles: string[];
 }[] = packageCatalog.icons;
 const pascal = (name: string) =>
   name
@@ -22,9 +23,20 @@ const content = await format(
     icons
       .map((icon) => `import ${pascal(icon.name)} from 'squircle-icons-svelte/${icon.name}';`)
       .join('\n') +
+    '\n' +
+    icons
+      .filter((icon) => icon.styles.includes('filled'))
+      .map(
+        (icon) =>
+          `import ${pascal(icon.name)}Filled from 'squircle-icons-svelte/filled/${icon.name}';`,
+      )
+      .join('\n') +
     '\nexport const catalog = [\n' +
     icons
-      .map((icon) => `{ ...${JSON.stringify(icon)}, component: ${pascal(icon.name)} }`)
+      .map(
+        (icon) =>
+          `{ ...${JSON.stringify(icon)}, component: ${pascal(icon.name)}, filledComponent: ${icon.styles.includes('filled') ? pascal(icon.name) + 'Filled' : 'undefined'} }`,
+      )
       .join(',\n') +
     '\n];\n' +
     `export const strokeWeights = ${JSON.stringify(packageCatalog.strokeWeights)};\n`,

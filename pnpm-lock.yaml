@@ -599,7 +599,7 @@ packages:
     engines: {node: '>=0.10.0'}
 
   squircle-icons-svelte@file:vendor/squircle-icons-svelte-0.0.0.tgz:
-    resolution: {integrity: sha512-sd5DU8po/GCOFrT3CqCCMk3uQKkxiD0lkNQVkIBnXnvQXau8lvvuygELrjkB3VJlBgMHYXSsvAa+9uiUH/0ncg==, tarball: file:vendor/squircle-icons-svelte-0.0.0.tgz}
+    resolution: {integrity: sha512-1j7TEAMmDw4vXhO5Qi5M2Gvc9puhbeJuiwNfZ2NeUpSEtOtLxkDt7mWkTWNWxplOHmhKQI+6Z3a62WqDBgyETQ==, tarball: file:vendor/squircle-icons-svelte-0.0.0.tgz}
     version: 0.0.0
     engines: {node: '>=22.17.0'}
     peerDependencies:
