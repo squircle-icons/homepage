@@ -219,7 +219,9 @@ test('unsupported animation browsers retain endpoint controls', async ({ page })
   await expect(page.getByTestId('timeline-value')).toHaveText('0%');
 });
 
-test('Folder has equal visible padding on every side at each stroke weight', async ({ page }) => {
+test('horizontal Folder balances opposite visible margins at each stroke weight', async ({
+  page,
+}) => {
   await page.goto('/lab');
   for (const width of [1, 1.75, 2, 2.5]) {
     await page.getByRole('slider', { name: 'Stroke width' }).fill(String(width));
@@ -236,6 +238,9 @@ test('Folder has equal visible padding on every side at each stroke weight', asy
           24 - box.y - box.height - halfStroke,
         ];
       });
-    padding.forEach((inset) => expect(inset).toBeCloseTo(3 - width / 2, 6));
+    expect(padding[0]).toBeCloseTo(padding[2], 6);
+    expect(padding[1]).toBeCloseTo(padding[3], 6);
+    expect(padding[1]).toBeGreaterThan(padding[0]);
+    expect(padding.every((inset) => inset > 0)).toBe(true);
   }
 });

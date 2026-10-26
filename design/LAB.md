@@ -6,7 +6,7 @@ The workspace uses a fixed desktop layout. Additional behavior and visual-check 
 
 ## Current Folder candidate
 
-The front-panel upper edge is now straight. A single outer contour supplies the sides and bottom, removing doubled panel outlines. Its geometric bounds are x=3..21 and y=3..21. With stroke 1.75, visible padding is exactly 2.125 units on each of the four sides of the 24×24 viewBox. Browser checks measure that equality at four stroke weights. The existing motion recipes and A/B/C timing settings are unchanged; this is a geometry review candidate.
+The Folder is a horizontal rectangle with a straight front-panel upper edge and one outer contour. Its bounds are x=3..21 and y=5..19. At stroke 1.75, visible left/right padding is 2.125 units and top/bottom padding is 4.125 units. Opposite sides match exactly; the two pairs may differ to preserve the real object's aspect ratio. Browser checks measure this balance at four stroke weights. Existing motion recipes and A/B/C timing settings are unchanged; this remains a geometry review candidate.
 
 ## Current review priority
 
