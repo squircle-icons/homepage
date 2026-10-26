@@ -16,9 +16,9 @@ The homepage imports actual package exports. It does not run the core or adapter
 
 The pre-split white/black/indigo landing and gallery were inspected at desktop size, the landing at mobile size, all six original icons at 16/20/24/48 pixels, and folder closed/open plus paused bell motion. Captures retained in `design/previews/` document that review; browser-specific icon geometry baselines now belong to the Svelte repository.
 
-Owner-approved artwork includes Folder and Camera in Outline/Filled, plus Search in Outline only. Search has no Filled source, export, tarball entry or Lab option. Bell, Heart and Settings remain Needs review.
+Owner-approved artwork includes Folder, Camera and Heart in Outline/Filled, plus Search in Outline only. Search has no Filled source, export, tarball entry or Lab option. Bell and Settings remain Needs review.
 
-Heart retains the established upper lobes. Its lower silhouette is a slim V with a very slight outward convex bow and a compact rounded tip. Tangents remain continuous and outer bounds are unchanged. Outline and Filled were inspected at 16/20/24/48px and in the Lab at 11×. The current review screenshot includes a local Y=95% preview; that sizing has not been baked into source.
+Heart retains the established upper lobes. Its lower silhouette is a slim V with a very slight outward convex bow and a compact rounded tip. Tangents remain continuous and outer bounds are unchanged. Outline and Filled were inspected at 16/20/24/48px and in the Lab at 11×. The owner approved both Heart styles after the head alignment and grid correction. The reviewed local X/Y=95% settings are recorded in source metadata; that preview sizing has not been baked into geometry.
 
 For the latest Filled Heart head alignment, 29 core tests, 4 adapter unit tests, packed-consumer checks, isolated bundles, deterministic generation and all 39 adapter browser tests passed. A new pixel-profile test compares the Filled head to the visible Regular Outline exterior: top-edge positions differ by at most one raster pixel at 40× magnification (0.025 drawing units) across Chromium, Firefox and WebKit. Filled upper curves are fitted to a 0.85-unit normal offset of the existing Outline and trimmed at the symmetric notch intersection; the lower contour is unchanged.
 
@@ -30,3 +30,5 @@ After the grid alignment correction, the full homepage verification passed: zero
 - SSR coverage uses production prerender and browser hydration. A hosted, on-demand SSR deployment has not been tested.
 - CI uses macOS 26 for consistency with visual baselines. Hosted results are visible in each repository's Actions tab.
 - Final name, visual direction, and npm release policy remain pending. Original artwork and code use the MIT license. Source repositories are public, while package publication stays disabled (`private: true` and the publication guard). No website deployment or npm publication was performed.
+
+For the Heart approval metadata update, core validation and all 29 unit tests passed. Svelte deterministic generation, type checking, package build and all 4 unit tests passed. Homepage formatting, dependency provenance, deterministic catalog, type checking and production build passed; the existing sidebar scenario passed in Chromium, Firefox and WebKit (3 cases). Geometry and visual baselines were unchanged, so the full visual and packed-consumer suites were not repeated for this metadata update.

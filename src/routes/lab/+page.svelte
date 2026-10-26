@@ -6,6 +6,11 @@
   const iconName = $derived(selectedIcon[0].toUpperCase() + selectedIcon.slice(1));
   const hasFilled = $derived(entry.styles.includes('filled'));
   const approvedCount = catalog.filter((icon) => icon.reviewStatus === 'approved').length;
+  const pendingNames = new Intl.ListFormat('en', { style: 'long', type: 'conjunction' }).format(
+    catalog
+      .filter((icon) => icon.reviewStatus !== 'approved')
+      .map((icon) => icon.name[0].toUpperCase() + icon.name.slice(1)),
+  );
   const reviewChecks = $derived([
     'Recognizable at 16px',
     'Clean edges without doubled strokes',
@@ -534,8 +539,9 @@
       {/each}
     </div>
     <p>
-      {approvedCount} of {catalog.length} icons approved.<br />Bell, Heart and Settings await
-      review.
+      {approvedCount} of {catalog.length} icons approved.<br />{pendingNames
+        ? `${pendingNames} await review.`
+        : 'All icons approved.'}
     </p>
   </aside>
 </div>

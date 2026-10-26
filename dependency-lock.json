@@ -1,7 +1,7 @@
 {
   "repository": "https://github.com/squircle-icons/svelte",
-  "commit": "74e5578d1cd2120c41e9aad81d8f7a853248610d",
+  "commit": "84a55a683497ee7722dd016e28db93f80aa79711",
   "version": "0.0.0",
   "artifact": "vendor/squircle-icons-svelte-0.0.0.tgz",
-  "sha256": "dc2ebd56ac8731bd9fa4707883aa926eb0417f95e99d88d178272b520d6ee674"
+  "sha256": "3561f1ee2cdda0a7aaee2348b531fa5dd04d1a9b7c70514a8ecec0d2f0b4ee76"
 }
