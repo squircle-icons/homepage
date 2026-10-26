@@ -38,7 +38,7 @@
   <footer>
     <a class="footer-brand" href="/">Squircle Icons</a><span
       >Drawn with intention. Built for Svelte.</span
-    ><span class="footer-note">Alpha stage · License pending</span>
+    ><span class="footer-note">Alpha stage · MIT license</span>
   </footer>
 </div>
 

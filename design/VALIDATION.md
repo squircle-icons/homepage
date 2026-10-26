@@ -21,4 +21,4 @@ These establish an alpha reference, not owner approval. Review folder panel stro
 - No manual screen-reader, physical mobile-device, touch-device, or older-browser testing has been completed. Mobile checks use browser viewport emulation.
 - SSR coverage uses production prerender and browser hydration. A hosted, on-demand SSR deployment has not been tested.
 - CI uses macOS 26 for consistency with visual baselines. Hosted results are visible in each repository's Actions tab.
-- License, final name, visual direction, and npm release policy remain pending. Source repositories are public, while package publication stays disabled (`private: true`, `UNLICENSED`). No website deployment or npm publication was performed.
+- Final name, visual direction, and npm release policy remain pending. Original artwork and code use the MIT license. Source repositories are public, while package publication stays disabled (`private: true` and the publication guard). No website deployment or npm publication was performed.

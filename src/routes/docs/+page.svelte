@@ -36,8 +36,8 @@
       </p>
       <pre><code>{examples[0]}</code></pre>
       <p class="callout">
-        The package name is provisional. Licensing is pending review; this preview does not yet
-        grant an open-source license.
+        The package name is provisional. Original artwork, motion recipes, and code are licensed
+        under MIT. Third-party assets retain their own licenses.
       </p>
     </section>
     <section id="static">

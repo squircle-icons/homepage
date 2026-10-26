@@ -1,6 +1,6 @@
 # Squircle Icons · Homepage
 
-**Alpha stage · Public source · License pending**
+**Alpha stage · Open source · MIT license**
 
 The SvelteKit website for Squircle Icons: a white/black/indigo landing page, icon gallery, and documentation. It consumes the real packed [Svelte adapter](https://github.com/squircle-icons/svelte); artwork and recipes live in [core](https://github.com/squircle-icons/core).
 
@@ -35,4 +35,4 @@ pnpm sync:svelte ../svelte
 
 The committed, clean Svelte checkout is checked and built, then packed into `vendor/`. The command records its commit and SHA-256, refreshes the package/lockfile, and regenerates catalog imports. Commit the artifact, provenance, generated catalog, and lockfile together. CI only needs this repository and the public development dependencies; it does not need cross-repository tokens.
 
-The included tarball is a reviewed alpha artifact, not an npm release. Licensing remains undecided and no website deployment is performed by CI. See [migration provenance](MIGRATION.md), [design notes](design/DESIGN.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
+The included tarball is a reviewed alpha artifact, not an npm release. Original artwork and code are licensed under [MIT](LICENSE); third-party assets retain their own licenses. No website deployment is performed by CI. See [migration provenance](MIGRATION.md), [design notes](design/DESIGN.md), and [third-party notices](THIRD_PARTY_NOTICES.md).

@@ -18,7 +18,7 @@
     {
       title: 'Can I use these in a project today?',
       answer:
-        'You can build and install the local Svelte package for evaluation. This is an alpha: the artwork, API, and package name can change. A reuse license has not been adopted yet; that decision is still pending.',
+        'You can build and install the local Svelte package for evaluation. This is an alpha: the artwork, API, and package name can change. The original artwork and code are available under the MIT license.',
     },
     {
       title: 'Do animated icons always move?',
