@@ -15,7 +15,7 @@
     'Recognizable at 16px',
     'Clean edges without doubled strokes',
     'Balanced opposite spacing',
-    ...(hasFilled ? ['Outline and filled feel like one family'] : []),
+    ...(hasFilled ? ['Outline and filled outer edges match'] : []),
   ]);
   const drafts = new Map<
     string,
@@ -540,7 +540,7 @@
     </div>
     <p>
       {approvedCount} of {catalog.length} icons approved.<br />{pendingNames
-        ? `${pendingNames} await review.`
+        ? `${pendingNames} ${catalog.length - approvedCount === 1 ? 'awaits' : 'await'} review.`
         : 'All icons approved.'}
     </p>
   </aside>
