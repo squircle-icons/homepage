@@ -39,8 +39,8 @@ The included tarball is a reviewed alpha artifact, not an npm release. Original 
 
 ## Icon lab
 
-Open the desktop-only `/lab` workspace for static review. All six icons have native Outline and Filled variants. Folder is owner-approved; Camera, Bell, Heart, Search and Settings await review. Select an icon in the right sidebar and compare its 16/20/24/48px samples on light/dark surfaces with ink/indigo colors.
+Open the desktop-only `/lab` workspace for static review. All six icons have Outline variants; five also have Filled. Folder and Camera (both styles) and Search (Outline only) are owner-approved. Bell, Heart and Settings await review. Select an icon in the right sidebar and compare its 16/20/24/48px samples on light/dark surfaces with ink/indigo colors.
 
 Outline has Thin (1.25), Regular / default (1.70) and Bold (2.25), plus fine adjustment. Filled Folder uses the same control for its inner gap; the other filled studies use fixed solid geometry. X/Y are independent positive percentages with no upper or artboard cap. Preview zoom runs from 4× to 24× (default 14×) without changing artwork or actual-size samples. Its viewport scrolls for close inspection. Rotate with a degree field or ±15° steps; the canvas, samples and comparisons stay in sync. Negative spacing reports overflow rather than preventing it. “Match Y to left spacing” is an optional one-time action at 0°/180°, not an axis lock. Per-icon drafts last for the page session. See [lab review notes](design/LAB.md).
 
-![Folder lab desktop preview](design/previews/lab-desktop.png)
+![Icon lab desktop preview](design/previews/lab-desktop.png)

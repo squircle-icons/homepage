@@ -264,13 +264,16 @@ test('stroke presets share Regular 1.70 as default while retaining fine adjustme
   );
 });
 
-test('right sidebar exposes all review pairs and preserves independent drafts', async ({
+test('right sidebar exposes supported styles and preserves independent drafts', async ({
   page,
 }) => {
   await page.goto('/lab');
   const sidebar = page.getByRole('complementary', { name: 'Icon list' });
   await expect(sidebar.getByRole('button')).toHaveCount(6);
   await expect(sidebar.getByRole('button', { name: 'Select folder', exact: true })).toContainText(
+    'Approved',
+  );
+  await expect(sidebar.getByRole('button', { name: 'Select camera', exact: true })).toContainText(
     'Approved',
   );
   await size(page, 'X', 90);
@@ -282,6 +285,15 @@ test('right sidebar exposes all review pairs and preserves independent drafts', 
       icon[0].toUpperCase() + icon.slice(1) + ' lab',
     );
     await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '1.7');
+    if (icon === 'search') {
+      await expect(page.getByRole('button', { name: 'Filled', exact: true })).toHaveCount(0);
+      await expect(page.getByTestId('style-filled')).toHaveCount(0);
+      await expect(
+        sidebar.getByRole('button', { name: 'Select search', exact: true }),
+      ).toContainText('Approved');
+      await balanced(page);
+      continue;
+    }
     await expect(page.getByRole('button', { name: 'Filled', exact: true })).toBeEnabled();
     await page.getByRole('button', { name: 'Filled', exact: true }).click();
     await expect(main(page).locator('svg')).toHaveAttribute('stroke', 'none');
@@ -382,7 +394,7 @@ test('switching styles preserves control space and preview position for every ic
       );
   for (const width of [1280, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
-    for (const icon of ['camera', 'bell', 'folder', 'heart', 'search', 'settings']) {
+    for (const icon of ['camera', 'bell', 'folder', 'heart', 'settings']) {
       await page.getByRole('button', { name: 'Select ' + icon, exact: true }).click();
       await page.getByRole('button', { name: 'Outline', exact: true }).click();
       const before = await positions();

@@ -5,6 +5,13 @@
   const entry = $derived(catalog.find((item) => item.name === selectedIcon)!);
   const iconName = $derived(selectedIcon[0].toUpperCase() + selectedIcon.slice(1));
   const hasFilled = $derived(entry.styles.includes('filled'));
+  const approvedCount = catalog.filter((icon) => icon.reviewStatus === 'approved').length;
+  const reviewChecks = $derived([
+    'Recognizable at 16px',
+    'Clean edges without doubled strokes',
+    'Balanced opposite spacing',
+    ...(hasFilled ? ['Outline and filled feel like one family'] : []),
+  ]);
   const drafts = new Map<
     string,
     {
@@ -21,7 +28,11 @@
     drafts.set(selectedIcon, { kind, stroke, x: sizeX, y: sizeY, rotation, checked: [...checked] });
     const draft = drafts.get(name);
     selectedIcon = name;
-    kind = draft?.kind ?? 'outline';
+    kind =
+      draft?.kind === 'filled' &&
+      catalog.find((icon) => icon.name === name)?.styles.includes('filled')
+        ? 'filled'
+        : 'outline';
     stroke = draft?.stroke ?? strokeWeights.regular;
     sizeX = draft?.x ?? 100;
     sizeY = draft?.y ?? 100;
@@ -137,11 +148,10 @@
           <div class="segmented">
             <button aria-pressed={kind === 'outline'} onclick={() => (kind = 'outline')}
               >Outline</button
-            ><button
-              disabled={!hasFilled}
-              aria-pressed={kind === 'filled'}
-              onclick={() => (kind = 'filled')}>Filled</button
-            >
+            >{#if hasFilled}<button
+                aria-pressed={kind === 'filled'}
+                onclick={() => (kind = 'filled')}>Filled</button
+              >{/if}
           </div>
         </fieldset>
         <div class="setting weight-slot">
@@ -441,11 +451,11 @@
     </section>
     <section class="comparison-section" aria-labelledby="style-heading">
       <div class="section-heading">
-        <h2 id="style-heading">Compare styles</h2>
-        <span>Same scale, X/Y and rotation</span>
+        <h2 id="style-heading">{hasFilled ? 'Compare styles' : 'Style preview'}</h2>
+        <span>{hasFilled ? 'Same scale, X/Y and rotation' : 'Outline only'}</span>
       </div>
-      <div class="comparison-grid">
-        {#each ['outline', 'filled'] as style}<article
+      <div class="comparison-grid" class:single={!hasFilled}>
+        {#each hasFilled ? ['outline', 'filled'] : ['outline'] as style}<article
             data-testid={'style-' + style}
             class:selected={kind === style}
           >
@@ -460,27 +470,24 @@
               >
             </div>
             <div class="comparison-preview">
-              {#if style === 'outline' || hasFilled}<StaticIconPreview
-                  icon={selectedIcon}
-                  {rotation}
-                  kind={style as 'outline' | 'filled'}
-                  size={72}
-                  x={sizeX}
-                  y={sizeY}
-                  color="#4f46e5"
-                  strokeWidth={stroke}
-                  label={'Compare ' + style + ' ' + iconName}
-                />{:else}<span class="pending-style">Filled study not drawn yet</span>{/if}
+              <StaticIconPreview
+                icon={selectedIcon}
+                {rotation}
+                kind={style as 'outline' | 'filled'}
+                size={72}
+                x={sizeX}
+                y={sizeY}
+                color="#4f46e5"
+                strokeWidth={stroke}
+                label={'Compare ' + style + ' ' + iconName}
+              />
             </div>
             <button
-              disabled={style === 'filled' && !hasFilled}
               aria-pressed={kind === style}
               onclick={() => (kind = style as 'outline' | 'filled')}
-              >{style === 'filled' && !hasFilled
-                ? 'Coming later'
-                : kind === style
-                  ? 'Selected'
-                  : 'Use style'}<span aria-hidden="true">{kind === style ? '✓' : '↗'}</span></button
+              >{kind === style ? 'Selected' : 'Use style'}<span aria-hidden="true"
+                >{kind === style ? '✓' : '↗'}</span
+              ></button
             >
           </article>{/each}
       </div>
@@ -488,12 +495,13 @@
     <details class="review-details">
       <summary>Visual checks <span>Geometry, weight and spacing</span></summary>
       <div class="review-panel">
-        {#each ['Recognizable at 16px', 'Clean edges without doubled strokes', 'Balanced opposite spacing', 'Outline and filled feel like one family'] as item}<label
-            class="review-check"
+        {#each reviewChecks as item}<label class="review-check"
             ><input type="checkbox" value={item} bind:group={checked} /><span>{item}</span></label
           >{/each}
         <div class="review-count">
-          <span class="mono">{checked.length} / 4 REVIEWED</span><span>This session only</span>
+          <span class="mono">{checked.length} / {reviewChecks.length} REVIEWED</span><span
+            >This session only</span
+          >
         </div>
       </div>
     </details>
@@ -525,7 +533,10 @@
         </button>
       {/each}
     </div>
-    <p>Folder outline and filled approved.<br />Other icons await visual review.</p>
+    <p>
+      {approvedCount} of {catalog.length} icons approved.<br />Bell, Heart and Settings await
+      review.
+    </p>
   </aside>
 </div>
 
@@ -627,10 +638,6 @@
     line-height: 1.7;
     color: #a1a1aa;
     margin: 20px 8px 0;
-  }
-  .pending-style {
-    font-size: 12px;
-    color: #a1a1aa;
   }
   .weight-slot {
     display: grid;
@@ -1143,6 +1150,9 @@
   .section-heading > span {
     font-size: 11px;
     color: #a1a1aa;
+  }
+  .comparison-grid.single {
+    grid-template-columns: 1fr;
   }
   .comparison-grid {
     display: grid;
