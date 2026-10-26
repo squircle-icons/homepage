@@ -16,7 +16,7 @@ The homepage imports actual package exports. It does not run the core or adapter
 
 The pre-split white/black/indigo landing and gallery were inspected at desktop size, the landing at mobile size, all six original icons at 16/20/24/48 pixels, and folder closed/open plus paused bell motion. Captures retained in `design/previews/` document that review; browser-specific icon geometry baselines now belong to the Svelte repository.
 
-Folder Outline and Filled were approved by the owner on 2026-10-26 at stroke 1.70 and X=100% / Y=110%; these proportions are now baked into the source. The refreshed Camera, Bell, Heart, Search and Settings pairs, rotation controls and free axes were inspected at desktop size. The five new pairs remain Needs review; no automated result or source update marks them approved.
+Folder Outline and Filled were approved by the owner on 2026-10-26 at stroke 1.70 and X=100% / Y=110%; these proportions are now baked into the source. The refreshed Camera, Bell, Heart, Search and Settings pairs, rotation controls and free axes were inspected at desktop size. Camera was subsequently refined with longer straight shoulder ledges in both styles and a circular Outline indicator; these changes passed the same source, package and browser checks. The five new pairs remain Needs review; no automated result or source update marks them approved.
 
 ## Limits
 
