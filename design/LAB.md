@@ -4,6 +4,10 @@
 
 The workspace uses a fixed desktop layout. Additional behavior and visual-check tools are under the “Behavior & review” disclosure.
 
+## Current review priority
+
+Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/DESIGN_RULES.md). First review static Folder geometry: preserve a real folder’s outer silhouette with appropriate rounded corners; its front-panel upper edge may be straight. Check for doubled contours and inconsistent stroke weight at actual sizes. Further motion refinement waits for an approved static baseline. Existing A/B/C controls are evaluation tools, not a requirement to animate every icon.
+
 ## Review flow
 
 1. Inspect closed/open silhouettes and 16/20/24/48px optical sizes in light and dark.
