@@ -5,7 +5,7 @@
 ## Review flow
 
 1. Select an icon in the right sidebar. All six have Outline and Filled variants. Folder is owner-approved; Camera, Bell, Heart, Search and Settings are new review pairs. Each icon retains its style, weight, X/Y, rotation and checklist while switching in this page session.
-2. Outline uses Thin (1.25), Regular / default (1.70) and Bold (2.25), plus fine adjustment. In Filled Folder these settings control its negative-space divider with a fixed outside contour. The other five filled studies use fixed solid geometry, so weight controls are hidden in their Filled view.
+2. Outline uses Thin (1.25), Regular / default (1.70) and Bold (2.25), plus fine adjustment. In Filled Folder these settings control its negative-space divider with a fixed outside contour. The other five filled studies use fixed solid geometry, so weight controls are hidden in their Filled view. Their layout space is retained so the icon and controls below stay stationary while switching styles; inactive controls are inert and hidden from assistive technology.
 3. X and Y are independent percentages of source geometry. There is no maximum, artboard cap, aspect lock or automatic resizing when changing style or weight. Positive values from 1% are supported. Artwork may extend beyond the 24×24 grid; negative spacing and “Outside 24×24 grid” report that state.
 4. Rotate around the artboard center using the degree field or ±15° buttons. Negative angles and multiple full turns are accepted. Rotation applies to the canvas, actual-size samples and style comparisons. Reset rotation returns to 0° without changing X/Y. Reset geometry restores X/Y=100%, Regular and 0°.
 5. “Match Y to left spacing” remains an explicit convenience at 0°/180°. It changes Y once, without locking either axis. At other angles it is disabled because rotated asymmetric contours do not have the same spacing relationship.
@@ -21,4 +21,4 @@ Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/
 
 ## Verification
 
-Run `pnpm verify`. Eleven Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual sizes, free independent X/Y above former limits, explicit spacing matching, filled counters, weight presets, all six review pairs, per-icon drafts, positive/negative/full-turn rotation, margin measurement, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.
+Run `pnpm verify`. Twelve Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual sizes, free independent X/Y above former limits, explicit spacing matching, filled counters, weight presets, all six review pairs, per-icon drafts, positive/negative/full-turn rotation, margin measurement, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.

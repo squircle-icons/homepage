@@ -366,3 +366,38 @@ test('rotated circular geometry has tight visible margins rather than a rotated 
   expect(vertical[1]).toBeCloseTo(12 - 8.7 * Math.SQRT2 - 0.85, 2);
   await expect(page.getByTestId('balance-state')).toHaveText('Outside 24×24 grid');
 });
+
+test('switching styles preserves control space and preview position for every icon', async ({
+  page,
+}) => {
+  await page.goto('/lab');
+  const positions = () =>
+    page
+      .locator('.weight-slot, .size-section, .canvas, .drawing, .optical-row')
+      .evaluateAll((elements) =>
+        elements.map((element) => {
+          const box = element.getBoundingClientRect();
+          return { y: box.y, height: box.height };
+        }),
+      );
+  for (const width of [1280, 1440]) {
+    await page.setViewportSize({ width, height: 1000 });
+    for (const icon of ['camera', 'bell', 'folder', 'heart', 'search', 'settings']) {
+      await page.getByRole('button', { name: 'Select ' + icon, exact: true }).click();
+      await page.getByRole('button', { name: 'Outline', exact: true }).click();
+      const before = await positions();
+      await page.getByRole('button', { name: 'Filled', exact: true }).click();
+      const filled = await positions();
+      for (let i = 0; i < before.length; i++) {
+        expect(filled[i].y).toBeCloseTo(before[i].y, 1);
+        expect(filled[i].height).toBeCloseTo(before[i].height, 1);
+      }
+      if (icon !== 'folder') {
+        await expect(page.getByRole('slider', { name: 'Stroke width' })).toHaveCount(0);
+        await expect(page.getByRole('button', { name: 'Regular', exact: true })).toHaveCount(0);
+      }
+      await page.getByRole('button', { name: 'Outline', exact: true }).click();
+      expect(await positions()).toEqual(before);
+    }
+  }
+});

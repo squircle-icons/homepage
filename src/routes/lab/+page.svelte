@@ -119,8 +119,13 @@
             >
           </div>
         </fieldset>
-        {#if adjustableWeight}
-          <div class="setting">
+        <div class="setting weight-slot">
+          <div
+            class="weight-options"
+            class:inactive={!adjustableWeight}
+            inert={!adjustableWeight}
+            aria-hidden={!adjustableWeight}
+          >
             <label class="field-label range-label" for="lab-stroke"
               >Stroke width <output>{stroke.toFixed(2)}</output></label
             >
@@ -154,9 +159,10 @@
               >
             </div>
           </div>
-        {:else}<div class="setting">
-            <span class="field-label">Fill</span><span class="solid-note">Solid geometry</span>
-          </div>{/if}
+          {#if !adjustableWeight}<div class="solid-description">
+              <span class="field-label">Fill</span><span class="solid-note">Solid geometry</span>
+            </div>{/if}
+        </div>
         <div class="size-section">
           <div class="size-heading">
             <span class="field-label">Shape size</span><span class="unit">%</span>
@@ -555,6 +561,16 @@
   .pending-style {
     font-size: 12px;
     color: #a1a1aa;
+  }
+  .weight-slot {
+    display: grid;
+  }
+  .weight-options,
+  .solid-description {
+    grid-area: 1 / 1;
+  }
+  .weight-options.inactive {
+    visibility: hidden;
   }
   .weight-presets {
     margin-bottom: 10px;
