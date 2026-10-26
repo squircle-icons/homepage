@@ -127,13 +127,13 @@
     </fieldset>
     <div class="setting">
       <label class="field-label range-label" for="lab-stroke"
-        >Stroke width <output>{kind === 'outline' ? stroke.toFixed(2) : '—'}</output></label
+        >Stroke width <output>{stroke.toFixed(2)}</output></label
       >
       <div class="stroke-control">
         <button
           class="small-button"
           aria-label="Decrease stroke width"
-          disabled={kind === 'filled' || stroke <= 1}
+          disabled={stroke <= 1}
           onclick={() => (stroke = Math.max(1, +(stroke - 0.25).toFixed(2)))}>−</button
         ><input
           id="lab-stroke"
@@ -142,17 +142,18 @@
           max="2.5"
           step="0.05"
           bind:value={stroke}
-          disabled={kind === 'filled'}
         /><button
           class="small-button"
           aria-label="Increase stroke width"
-          disabled={kind === 'filled' || stroke >= 2.5}
+          disabled={stroke >= 2.5}
           onclick={() => (stroke = Math.min(2.5, +(stroke + 0.25).toFixed(2)))}>+</button
         >
       </div>
       <p class="hint">
         {kind === 'filled'
-          ? 'Filled uses solid geometry with no stroke.'
+          ? margins.gap !== undefined && Math.abs(margins.gap - stroke) > 0.005
+            ? `Gap ${margins.gap.toFixed(2)} units at this height; increase Y for the full gap.`
+            : 'Stroke width sets the inner gap; the outside stays fixed.'
           : 'Weight stays constant while resizing X/Y.'}
       </p>
     </div>
@@ -263,6 +264,9 @@
         <span class="status-dot"></span>{kind === 'outline' ? 'Outline' : 'Filled'}<span
           >{margins.width.toFixed(2)} × {margins.height.toFixed(2)} units</span
         >
+        {#if kind === 'filled'}<span data-testid="filled-gap"
+            >Gap {(margins.gap ?? stroke).toFixed(2)} units</span
+          >{/if}
       </div>
     </div>
     <div class="spacing-panel">
@@ -319,7 +323,7 @@
       >
         <div class="comparison-heading">
           <h3>{style === 'outline' ? 'Outline' : 'Filled'}</h3>
-          <span>{style === 'outline' ? 'Adjustable stroke' : 'Solid geometry'}</span>
+          <span>{style === 'outline' ? 'Adjustable stroke' : 'Adjustable inner gap'}</span>
         </div>
         <div class="comparison-preview">
           <StaticFolderPreview

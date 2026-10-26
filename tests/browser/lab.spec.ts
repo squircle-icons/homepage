@@ -83,15 +83,15 @@ test('independent X/Y sizing keeps the outline stroke constant and reports actua
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('100');
 });
 
-test('filled Folder has a genuine negative-space divider and no configurable stroke', async ({
+test('filled Folder gap follows stroke width without changing the outer silhouette', async ({
   page,
 }, info) => {
   await page.goto('/lab');
   await page.getByRole('button', { name: 'Filled', exact: true }).click();
   await expect(main(page).locator('svg')).toHaveAttribute('fill-rule', 'evenodd');
   await expect(main(page).locator('svg')).toHaveAttribute('stroke', 'none');
-  await expect(page.getByRole('slider', { name: 'Stroke width' })).toBeDisabled();
-  await expect(page.getByRole('button', { name: 'Increase stroke width' })).toBeDisabled();
+  await expect(page.getByRole('slider', { name: 'Stroke width' })).toBeEnabled();
+  await expect(page.getByRole('button', { name: 'Increase stroke width' })).toBeEnabled();
   const fill = await main(page)
     .locator('path')
     .evaluate((element) => {
@@ -102,6 +102,31 @@ test('filled Folder has a genuine negative-space divider and no configurable str
       };
     });
   expect(fill).toEqual({ slot: false, panel: true });
+  const originalPath = await main(page).locator('path').getAttribute('d');
+  const outer = originalPath!.slice(0, originalPath!.lastIndexOf(' M '));
+  await page.getByRole('slider', { name: 'Stroke width' }).fill('1');
+  await expect(main(page).locator('svg')).toHaveAttribute('data-cutout-width', '1');
+  expect(
+    await main(page)
+      .locator('path')
+      .evaluate((element) => (element as SVGGeometryElement).isPointInFill(new DOMPoint(12, 10.1))),
+  ).toBe(true);
+  await page.getByRole('slider', { name: 'Stroke width' }).fill('2.5');
+  await expect(page.getByTestId('filled-gap')).toHaveText('Gap 2.50 units');
+  expect(
+    await main(page)
+      .locator('path')
+      .evaluate((element) => (element as SVGGeometryElement).isPointInFill(new DOMPoint(12, 10.1))),
+  ).toBe(false);
+  const expanded = await main(page).locator('path').getAttribute('d');
+  expect(expanded!.slice(0, expanded!.lastIndexOf(' M '))).toBe(outer);
+  await expect(main(page).locator('svg')).toHaveAttribute('stroke', 'none');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.125 / 4.125');
+  await size(page, 'Y', 110);
+  await expect(page.getByTestId('filled-gap')).toHaveText('Gap 2.50 units');
+  await size(page, 'Y', 100);
+
   await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
   await expect(page.getByTestId('vertical-spacing')).toHaveText('4.125 / 4.125');
   await size(page, 'X', 80);
@@ -109,6 +134,9 @@ test('filled Folder has a genuine negative-space divider and no configurable str
   await balanced(page);
   if (info.project.name === 'chromium')
     await page.screenshot({ path: '.artifacts/previews/lab-static-filled.png', fullPage: true });
+  await size(page, 'Y', 1);
+  await expect(page.getByTestId('filled-gap')).toHaveText('Gap 0.06 units');
+  await expect(main(page).locator('svg')).toHaveAttribute('stroke', 'none');
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 });
 

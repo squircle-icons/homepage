@@ -1,6 +1,7 @@
 <script module lang="ts">
   export type Margins = {
     variant: 'outline' | 'filled';
+    gap?: number;
     left: number;
     right: number;
     top: number;
@@ -65,6 +66,10 @@
         Math.min(...sources.map((box) => box.y));
       onmeasure?.({
         variant: kind,
+        gap:
+          kind === 'filled' && svg.hasAttribute('data-cutout-width')
+            ? (Number(svg.getAttribute('data-cutout-width')) * y) / 100
+            : undefined,
         sourceWidth,
         sourceHeight,
         left: box.x - half,
@@ -92,6 +97,7 @@
   {#if kind === 'outline'}<Folder {size} {color} {strokeWidth} {label} />{:else}<FilledFolder
       {size}
       {color}
+      strokeWidth={strokeWidth / (y / 100)}
       {label}
     />{/if}
 </div>
