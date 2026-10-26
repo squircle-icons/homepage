@@ -12,12 +12,15 @@
   let linked = $state(false);
   let checked = $state<string[]>([]);
   let margins = $state<Margins>({
+    variant: 'outline',
     left: 2.125,
     right: 2.125,
     top: 4.125,
     bottom: 4.125,
     width: 19.75,
     height: 15.75,
+    sourceWidth: 18,
+    sourceHeight: 14,
   });
   const color = $derived(
     ink === 'indigo'
@@ -28,23 +31,53 @@
         ? '#f4f4f5'
         : '#27272a',
   );
-  const clamp = (value: number) =>
-    Math.min(115, Math.max(50, Number.isFinite(value) ? value : 100));
+  const lineWeight = $derived(kind === 'outline' ? stroke : 0);
+  const maximumX = $derived(((24 - lineWeight) / margins.sourceWidth) * 100);
+  const maximumY = $derived((margins.sourceWidth * sizeX) / margins.sourceHeight);
+  const gridMaximumY = $derived(((24 - lineWeight) / margins.sourceHeight) * 100);
+  const limit = (axis: 'x' | 'y') => (axis === 'x' ? maximumX : maximumY);
+  const bounded = (value: number, max: number) =>
+    Math.min(max, Math.max(1, Number.isFinite(value) ? value : 100));
   function resize(axis: 'x' | 'y', value: number) {
-    const next = clamp(value);
+    if (margins.variant !== kind) return;
     if (linked) {
-      const requested = next / (axis === 'x' ? sizeX : sizeY);
+      const requested = (Number.isFinite(value) ? value : 100) / (axis === 'x' ? sizeX : sizeY);
       const ratio = Math.min(
-        Math.min(115 / sizeX, 115 / sizeY),
-        Math.max(Math.max(50 / sizeX, 50 / sizeY), requested),
+        maximumX / sizeX,
+        gridMaximumY / sizeY,
+        Math.max(1 / sizeX, 1 / sizeY, requested),
       );
-      sizeX = Math.round(sizeX * ratio * 100) / 100;
-      sizeY = Math.round(sizeY * ratio * 100) / 100;
+      sizeX *= ratio;
+      sizeY *= ratio;
       return;
     }
-    if (axis === 'x') sizeX = next;
-    else sizeY = next;
+    if (axis === 'x') {
+      sizeX = bounded(value, maximumX);
+      sizeY = Math.min(sizeY, (margins.sourceWidth * sizeX) / margins.sourceHeight);
+    } else sizeY = bounded(value, maximumY);
   }
+  function matchLeft() {
+    if (margins.variant !== kind) return;
+    linked = false;
+    sizeY = maximumY;
+  }
+  // Changing style/weight can change the available space. Clamp from measured
+  // source bounds, rather than imposing a shared percentage ceiling.
+  $effect(() => {
+    if (margins.variant !== kind) return;
+    const nextX = bounded(sizeX, maximumX);
+    const nextY = bounded(sizeY, (margins.sourceWidth * nextX) / margins.sourceHeight);
+    if (Math.abs(nextX - sizeX) > 0.000001 || Math.abs(nextY - sizeY) > 0.000001) {
+      if (linked && (nextX < sizeX || nextY < sizeY)) {
+        const ratio = Math.min(nextX / sizeX, nextY / sizeY);
+        sizeX *= ratio;
+        sizeY *= ratio;
+      } else {
+        sizeX = nextX;
+        sizeY = nextY;
+      }
+    }
+  });
   function reset() {
     sizeX = sizeY = 100;
     stroke = 1.75;
@@ -56,7 +89,9 @@
   const balanced = $derived(
     Math.abs(margins.left - margins.right) < 0.001 &&
       Math.abs(margins.top - margins.bottom) < 0.001 &&
-      [margins.left, margins.right, margins.top, margins.bottom].every((value) => value >= 0),
+      [margins.left, margins.right, margins.top, margins.bottom].every(
+        (value) => value >= -0.00001,
+      ),
   );
 </script>
 
@@ -132,27 +167,32 @@
             class="small-button"
             aria-label={'Decrease size ' + item.axis.toUpperCase()}
             onclick={() => resize(item.axis, item.value - 5)}
-            disabled={item.value <= 50}>−</button
+            disabled={item.value <= 1.000001}>−</button
           ><input
             id={'lab-size-' + item.axis}
             type="number"
             aria-label={item.name}
-            min="50"
-            max="115"
+            min="1"
+            max={limit(item.axis)}
             step="0.01"
-            value={item.value}
+            value={Math.floor((item.value + 0.00000001) * 100) / 100}
             onchange={(event) => resize(item.axis, Number(event.currentTarget.value))}
           /><button
             class="small-button"
             aria-label={'Increase size ' + item.axis.toUpperCase()}
             onclick={() => resize(item.axis, item.value + 5)}
-            disabled={item.value >= 115}>+</button
+            disabled={item.value >= limit(item.axis) - 0.000001}>+</button
           >
         </div>{/each}
       <label class="checkbox-row"
         ><input type="checkbox" bind:checked={linked} /> Link X/Y proportions</label
       >
-      <p class="hint">Centered on the 24×24 grid. 100% is the source size.</p>
+      <button class="match-spacing" onclick={matchLeft}
+        >Match Y to left spacing <span aria-hidden="true">↔</span></button
+      >
+      <p class="hint" data-testid="y-limit">
+        Y up to {maximumY.toFixed(2)}% · top/bottom match the left margin.
+      </p>
     </div>
     <fieldset class="setting">
       <legend class="field-label">Surface</legend>
@@ -544,6 +584,19 @@
     height: 14px;
     flex-shrink: 0;
     cursor: pointer;
+  }
+  .match-spacing {
+    width: 100%;
+    border: 1px solid #e4e4e7;
+    border-radius: 5px;
+    background: white;
+    color: #6366f1;
+    padding: 7px 9px;
+    margin-top: 12px;
+    font-size: 11px;
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
   }
   .checkbox-row {
     display: flex;

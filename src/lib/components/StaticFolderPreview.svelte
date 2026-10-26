@@ -1,11 +1,14 @@
 <script module lang="ts">
   export type Margins = {
+    variant: 'outline' | 'filled';
     left: number;
     right: number;
     top: number;
     bottom: number;
     width: number;
     height: number;
+    sourceWidth: number;
+    sourceHeight: number;
   };
 </script>
 
@@ -49,7 +52,21 @@
       if (!svg) return;
       const box = svg.getBBox();
       const half = kind === 'outline' ? strokeWidth / 2 : 0;
+      // Individual source shapes have no transforms; parent preview scaling
+      // is excluded from their local getBBox, so limits follow real geometry.
+      const sources = Array.from(svg.querySelectorAll<SVGGraphicsElement>('path, circle')).map(
+        (shape) => shape.getBBox(),
+      );
+      const sourceWidth =
+        Math.max(...sources.map((box) => box.x + box.width)) -
+        Math.min(...sources.map((box) => box.x));
+      const sourceHeight =
+        Math.max(...sources.map((box) => box.y + box.height)) -
+        Math.min(...sources.map((box) => box.y));
       onmeasure?.({
+        variant: kind,
+        sourceWidth,
+        sourceHeight,
         left: box.x - half,
         right: 24 - box.x - box.width - half,
         top: box.y - half,

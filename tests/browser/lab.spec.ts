@@ -10,7 +10,7 @@ async function balanced(page: Page) {
   for (const name of ['horizontal-spacing', 'vertical-spacing']) {
     const values = (await page.getByTestId(name).innerText()).split('/').map(Number);
     expect(values[0]).toBeCloseTo(values[1], 3);
-    expect(values[0]).toBeGreaterThan(0);
+    expect(values[0]).toBeGreaterThanOrEqual(0);
   }
 }
 
@@ -63,18 +63,18 @@ test('independent X/Y sizing keeps the outline stroke constant and reports actua
   const path = main(page).locator('path').first();
   const originalStroke = await path.evaluate((element) => getComputedStyle(element).strokeWidth);
   await size(page, 'X', 75);
-  await size(page, 'Y', 110);
+  await size(page, 'Y', 90);
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('75');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('110');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('90');
   expect(await path.evaluate((element) => getComputedStyle(element).strokeWidth)).toBe(
     originalStroke,
   );
   await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.375 / 4.375');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.425 / 3.425');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.825 / 4.825');
   await page.getByRole('button', { name: 'Increase stroke width' }).click();
   await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '2');
   await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.250 / 4.250');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.300 / 3.300');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.700 / 4.700');
   await balanced(page);
   if (info.project.name === 'chromium')
     await page.screenshot({ path: '.artifacts/previews/lab-static-xy.png', fullPage: true });
@@ -119,12 +119,12 @@ test('linked axes clamp together, step with buttons and reset cleanly', async ({
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('105');
   await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('105');
   await size(page, 'X', 500);
-  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('115');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('115');
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('123.61');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('123.61');
   await expect(page.getByRole('button', { name: 'Increase size X', exact: true })).toBeDisabled();
   await size(page, 'Y', -50);
-  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('50');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('50');
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('1');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('1');
   await page.getByRole('button', { name: /Reset geometry/ }).click();
   await expect(page.getByLabel('Link X/Y proportions')).not.toBeChecked();
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('100');
@@ -169,4 +169,30 @@ test('opposite visible margins stay balanced across styles, stroke weights and n
     await balanced(page);
     expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
   }
+});
+
+test('Y sizing follows the measured left margin instead of a fixed percentage cap', async ({
+  page,
+}) => {
+  await page.goto('/lab');
+  await size(page, 'Y', 125);
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('125');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('2.375 / 2.375');
+  await expect(page.getByTestId('y-limit')).toContainText('128.57%');
+  await page.getByRole('button', { name: 'Match Y to left spacing' }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('128.57');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('2.125 / 2.125');
+  await expect(page.getByRole('button', { name: 'Increase size Y', exact: true })).toBeDisabled();
+  await size(page, 'X', 80);
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('3.925 / 3.925');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.925 / 3.925');
+  await page.getByRole('button', { name: 'Filled', exact: true }).click();
+  await expect(page.getByTestId('y-limit')).toContainText('100.32%');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.100 / 4.100');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.100 / 4.100');
+  await size(page, 'X', 120);
+  await page.getByRole('button', { name: 'Outline', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('120');
+  await balanced(page);
 });
