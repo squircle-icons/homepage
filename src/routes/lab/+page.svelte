@@ -1,26 +1,54 @@
 <script lang="ts">
-  import Folder from 'squircle-icons-svelte/folder';
-  import StaticFolderPreview, { type Margins } from '#lib/components/StaticFolderPreview.svelte';
+  import { catalog, strokeWeights } from '#lib/catalog.js';
+  import StaticIconPreview, { type Margins } from '#lib/components/StaticIconPreview.svelte';
+  let selectedIcon = $state('folder');
+  const entry = $derived(catalog.find((item) => item.name === selectedIcon)!);
+  const iconName = $derived(selectedIcon[0].toUpperCase() + selectedIcon.slice(1));
+  const hasFilled = $derived(entry.styles.includes('filled'));
+  const drafts = new Map<
+    string,
+    {
+      kind: 'outline' | 'filled';
+      stroke: number;
+      x: number;
+      y: number;
+      linked: boolean;
+      checked: string[];
+    }
+  >();
+  function selectIcon(name: string) {
+    if (name === selectedIcon) return;
+    drafts.set(selectedIcon, { kind, stroke, x: sizeX, y: sizeY, linked, checked: [...checked] });
+    const draft = drafts.get(name);
+    selectedIcon = name;
+    kind = draft?.kind ?? 'outline';
+    stroke = draft?.stroke ?? strokeWeights.regular;
+    sizeX = draft?.x ?? 100;
+    sizeY = draft?.y ?? 100;
+    linked = draft?.linked ?? false;
+    checked = draft?.checked ?? [];
+  }
   let kind = $state<'outline' | 'filled'>('outline');
   let surface = $state<'light' | 'dark'>('light');
   let ink = $state<'ink' | 'indigo'>('ink');
   let grid = $state(true);
   let guides = $state(true);
-  let stroke = $state(1.75);
+  let stroke = $state<number>(strokeWeights.regular);
   let sizeX = $state(100);
   let sizeY = $state(100);
   let linked = $state(false);
   let checked = $state<string[]>([]);
   let margins = $state<Margins>({
+    icon: 'folder',
     variant: 'outline',
-    left: 2.125,
-    right: 2.125,
-    top: 4.125,
-    bottom: 4.125,
-    width: 19.75,
-    height: 15.75,
+    left: 2.15,
+    right: 2.15,
+    top: 3.45,
+    bottom: 3.45,
+    width: 19.7,
+    height: 17.1,
     sourceWidth: 18,
-    sourceHeight: 14,
+    sourceHeight: 15.4,
   });
   const color = $derived(
     ink === 'indigo'
@@ -39,7 +67,7 @@
   const bounded = (value: number, max: number) =>
     Math.min(max, Math.max(1, Number.isFinite(value) ? value : 100));
   function resize(axis: 'x' | 'y', value: number) {
-    if (margins.variant !== kind) return;
+    if (margins.variant !== kind || margins.icon !== selectedIcon) return;
     if (linked) {
       const requested = (Number.isFinite(value) ? value : 100) / (axis === 'x' ? sizeX : sizeY);
       const ratio = Math.min(
@@ -57,14 +85,14 @@
     } else sizeY = bounded(value, maximumY);
   }
   function matchLeft() {
-    if (margins.variant !== kind) return;
+    if (margins.variant !== kind || margins.icon !== selectedIcon) return;
     linked = false;
     sizeY = maximumY;
   }
   // Changing style/weight can change the available space. Clamp from measured
   // source bounds, rather than imposing a shared percentage ceiling.
   $effect(() => {
-    if (margins.variant !== kind) return;
+    if (margins.variant !== kind || margins.icon !== selectedIcon) return;
     const nextX = bounded(sizeX, maximumX);
     const nextY = bounded(sizeY, (margins.sourceWidth * nextX) / margins.sourceHeight);
     if (Math.abs(nextX - sizeX) > 0.000001 || Math.abs(nextY - sizeY) > 0.000001) {
@@ -80,12 +108,14 @@
   });
   function reset() {
     sizeX = sizeY = 100;
-    stroke = 1.75;
+    stroke = strokeWeights.regular;
     linked = false;
   }
   function measure(value: Margins) {
     margins = value;
   }
+  // SVG bounds are float32 in browsers; normalize that noise before display rounding.
+  const spacing = (value: number) => (Math.round(Math.round(value * 1e5) / 100) / 1000).toFixed(3);
   const balanced = $derived(
     Math.abs(margins.left - margins.right) < 0.001 &&
       Math.abs(margins.top - margins.bottom) < 0.001 &&
@@ -96,268 +126,416 @@
 </script>
 
 <svelte:head
-  ><title>Folder Lab — Squircle Icons</title><meta
+  ><title>Icon Lab — Squircle Icons</title><meta
     name="description"
-    content="A static icon workbench for outline and filled Folder designs, stroke weight, X/Y sizing and balanced spacing."
+    content="A static icon workbench for outline and filled icon designs, stroke weight, X/Y sizing and balanced spacing."
   /></svelte:head
 >
 
 <section class="lab-heading">
-  <h1>Folder <span>lab</span></h1>
+  <h1>{iconName} <span>lab</span></h1>
   <a href="/icons" aria-label="Back to icons">Back to icons <span aria-hidden="true">↗</span></a>
 </section>
-<div class="workbench" data-testid="folder-lab">
-  <aside class="controls" aria-label="Icon settings">
-    <div class="panel-title">Settings <span>Static study</span></div>
-    <label class="field-label" for="lab-icon">Icon</label>
-    <div class="icon-select">
-      <Folder size={20} /><select id="lab-icon"
-        ><option value="folder">Folder</option><option disabled>Bell — later study</option><option
-          disabled>Camera — later study</option
-        ><option disabled>Heart — later study</option><option disabled>Search — later study</option
-        ><option disabled>Settings — later study</option></select
-      >
-    </div>
-    <fieldset class="setting">
-      <legend class="field-label">Style</legend>
-      <div class="segmented">
-        <button aria-pressed={kind === 'outline'} onclick={() => (kind = 'outline')}>Outline</button
-        ><button aria-pressed={kind === 'filled'} onclick={() => (kind = 'filled')}>Filled</button>
-      </div>
-    </fieldset>
-    <div class="setting">
-      <label class="field-label range-label" for="lab-stroke"
-        >Stroke width <output>{stroke.toFixed(2)}</output></label
-      >
-      <div class="stroke-control">
-        <button
-          class="small-button"
-          aria-label="Decrease stroke width"
-          disabled={stroke <= 1}
-          onclick={() => (stroke = Math.max(1, +(stroke - 0.25).toFixed(2)))}>−</button
-        ><input
-          id="lab-stroke"
-          type="range"
-          min="1"
-          max="2.5"
-          step="0.05"
-          bind:value={stroke}
-        /><button
-          class="small-button"
-          aria-label="Increase stroke width"
-          disabled={stroke >= 2.5}
-          onclick={() => (stroke = Math.min(2.5, +(stroke + 0.25).toFixed(2)))}>+</button
-        >
-      </div>
-      <p class="hint">
-        {kind === 'filled'
-          ? margins.gap !== undefined && Math.abs(margins.gap - stroke) > 0.005
-            ? `Gap ${margins.gap.toFixed(2)} units at this height; increase Y for the full gap.`
-            : 'Stroke width sets the inner gap; the outside stays fixed.'
-          : 'Weight stays constant while resizing X/Y.'}
-      </p>
-    </div>
-    <div class="size-section">
-      <div class="size-heading">
-        <span class="field-label">Shape size</span><span class="unit">%</span>
-      </div>
-      {#each [{ axis: 'x' as const, name: 'Size X', value: sizeX }, { axis: 'y' as const, name: 'Size Y', value: sizeY }] as item}<div
-          class="axis-control"
-        >
-          <label for={'lab-size-' + item.axis}>{item.axis.toUpperCase()}</label><button
-            class="small-button"
-            aria-label={'Decrease size ' + item.axis.toUpperCase()}
-            onclick={() => resize(item.axis, item.value - 5)}
-            disabled={item.value <= 1.000001}>−</button
-          ><input
-            id={'lab-size-' + item.axis}
-            type="number"
-            aria-label={item.name}
-            min="1"
-            max={limit(item.axis)}
-            step="0.01"
-            value={Math.floor((item.value + 0.00000001) * 100) / 100}
-            onchange={(event) => resize(item.axis, Number(event.currentTarget.value))}
-          /><button
-            class="small-button"
-            aria-label={'Increase size ' + item.axis.toUpperCase()}
-            onclick={() => resize(item.axis, item.value + 5)}
-            disabled={item.value >= limit(item.axis) - 0.000001}>+</button
+<div class="lab-layout">
+  <div class="editor">
+    <div class="workbench" data-testid="folder-lab">
+      <aside class="controls" aria-label="Icon settings">
+        <div class="panel-title">Settings <span>Static study</span></div>
+        <fieldset class="setting">
+          <legend class="field-label">Style</legend>
+          <div class="segmented">
+            <button aria-pressed={kind === 'outline'} onclick={() => (kind = 'outline')}
+              >Outline</button
+            ><button
+              disabled={!hasFilled}
+              aria-pressed={kind === 'filled'}
+              onclick={() => (kind = 'filled')}>Filled</button
+            >
+          </div>
+        </fieldset>
+        <div class="setting">
+          <label class="field-label range-label" for="lab-stroke"
+            >Stroke width <output>{stroke.toFixed(2)}</output></label
           >
-        </div>{/each}
-      <label class="checkbox-row"
-        ><input type="checkbox" bind:checked={linked} /> Link X/Y proportions</label
-      >
-      <button class="match-spacing" onclick={matchLeft}
-        >Match Y to left spacing <span aria-hidden="true">↔</span></button
-      >
-      <p class="hint" data-testid="y-limit">
-        Y up to {maximumY.toFixed(2)}% · top/bottom match the left margin.
-      </p>
+          <div class="segmented weight-presets" aria-label="Stroke weight">
+            {#each [{ name: 'Thin', value: strokeWeights.thin }, { name: 'Regular', value: strokeWeights.regular }, { name: 'Bold', value: strokeWeights.bold }] as weight}
+              <button
+                aria-pressed={Math.abs(stroke - weight.value) < 0.00001}
+                title={weight.name === 'Regular' ? 'Default · 1.70' : weight.value.toFixed(2)}
+                onclick={() => (stroke = weight.value)}>{weight.name}</button
+              >
+            {/each}
+          </div>
+          <div class="stroke-control">
+            <button
+              class="small-button"
+              aria-label="Decrease stroke width"
+              disabled={stroke <= 1}
+              onclick={() => (stroke = Math.max(1, +(stroke - 0.25).toFixed(2)))}>−</button
+            ><input
+              id="lab-stroke"
+              type="range"
+              min="1"
+              max="2.5"
+              step="0.05"
+              bind:value={stroke}
+            /><button
+              class="small-button"
+              aria-label="Increase stroke width"
+              disabled={stroke >= 2.5}
+              onclick={() => (stroke = Math.min(2.5, +(stroke + 0.25).toFixed(2)))}>+</button
+            >
+          </div>
+        </div>
+        <div class="size-section">
+          <div class="size-heading">
+            <span class="field-label">Shape size</span><span class="unit">%</span>
+          </div>
+          {#each [{ axis: 'x' as const, name: 'Size X', value: sizeX }, { axis: 'y' as const, name: 'Size Y', value: sizeY }] as item}<div
+              class="axis-control"
+            >
+              <label for={'lab-size-' + item.axis}>{item.axis.toUpperCase()}</label><button
+                class="small-button"
+                aria-label={'Decrease size ' + item.axis.toUpperCase()}
+                onclick={() => resize(item.axis, item.value - 5)}
+                disabled={item.value <= 1.000001}>−</button
+              ><input
+                id={'lab-size-' + item.axis}
+                type="number"
+                aria-label={item.name}
+                min="1"
+                max={limit(item.axis)}
+                step="0.01"
+                value={Math.floor((item.value + 0.00000001) * 100) / 100}
+                onchange={(event) => resize(item.axis, Number(event.currentTarget.value))}
+              /><button
+                class="small-button"
+                aria-label={'Increase size ' + item.axis.toUpperCase()}
+                onclick={() => resize(item.axis, item.value + 5)}
+                disabled={item.value >= limit(item.axis) - 0.000001}>+</button
+              >
+            </div>{/each}
+          <label class="checkbox-row"
+            ><input type="checkbox" bind:checked={linked} /> Link X/Y proportions</label
+          >
+          <button class="match-spacing" onclick={matchLeft}
+            >Match Y to left spacing <span aria-hidden="true">↔</span></button
+          >
+          <p class="hint" data-testid="y-limit">
+            Y up to {maximumY.toFixed(2)}% · top/bottom match the left margin.
+          </p>
+        </div>
+        <fieldset class="setting">
+          <legend class="field-label">Surface</legend>
+          <div class="segmented">
+            <button aria-pressed={surface === 'light'} onclick={() => (surface = 'light')}
+              >Light</button
+            ><button aria-pressed={surface === 'dark'} onclick={() => (surface = 'dark')}
+              >Dark</button
+            >
+          </div>
+        </fieldset>
+        <fieldset class="setting">
+          <legend class="field-label">Color</legend>
+          <div class="ink-options">
+            <button
+              class="swatch ink"
+              aria-label="Ink color"
+              aria-pressed={ink === 'ink'}
+              onclick={() => (ink = 'ink')}
+            ></button><button
+              class="swatch indigo"
+              aria-label="Indigo color"
+              aria-pressed={ink === 'indigo'}
+              onclick={() => (ink = 'indigo')}
+            ></button><span>{ink === 'ink' ? 'Ink' : 'Indigo'}</span>
+          </div>
+        </fieldset>
+        <label class="switch-row"
+          ><span>Drawing grid</span><input type="checkbox" bind:checked={grid} /></label
+        ><label class="switch-row"
+          ><span>Spacing guides</span><input type="checkbox" bind:checked={guides} /></label
+        >
+        <button class="reset-button" onclick={reset}
+          >Reset geometry <span aria-hidden="true">↺</span></button
+        >
+      </aside>
+      <section class="canvas-panel" aria-label={'Static ' + iconName + ' workbench'}>
+        <div class="canvas-topline">
+          <span><b>{selectedIcon}</b><span class="muted"> / {kind}</span></span><span class="mono"
+            >24 × 24 · 7× PREVIEW</span
+          >
+        </div>
+        <div class="canvas" class:dark={surface === 'dark'} style:color>
+          <div class="drawing" class:gridded={grid} class:guided={guides}>
+            <span class="axis horizontal" aria-hidden="true"></span><span
+              class="axis vertical"
+              aria-hidden="true"
+            ></span>
+            <div data-testid="main-study">
+              <StaticIconPreview
+                icon={selectedIcon}
+                {kind}
+                x={sizeX}
+                y={sizeY}
+                {color}
+                strokeWidth={stroke}
+                label={iconName + ' ' + kind + ' preview'}
+                onmeasure={measure}
+              />
+            </div>
+            {#if guides}<span class="spacing top mono" data-testid="spacing-top"
+                >{spacing(margins.top)}</span
+              ><span class="spacing bottom mono" data-testid="spacing-bottom"
+                >{spacing(margins.bottom)}</span
+              ><span class="spacing left mono" data-testid="spacing-left"
+                >{spacing(margins.left)}</span
+              ><span class="spacing right mono" data-testid="spacing-right"
+                >{spacing(margins.right)}</span
+              >{/if}
+          </div>
+          <div class="canvas-status">
+            <span class="status-dot"></span>{kind === 'outline' ? 'Outline' : 'Filled'}<span
+              >{margins.width.toFixed(2)} × {margins.height.toFixed(2)} units</span
+            >
+            {#if kind === 'filled'}<span data-testid="filled-gap"
+                >Gap {(margins.gap ?? stroke).toFixed(2)} units</span
+              >{/if}
+          </div>
+        </div>
+        <div class="spacing-panel">
+          <div class="spacing-title">
+            <span>Visible spacing</span><span
+              class:balanced
+              class="balance-state"
+              data-testid="balance-state"
+              >{balanced ? 'Opposite sides balanced' : 'Review alignment'}</span
+            >
+          </div>
+          <div class="spacing-values">
+            <div>
+              <span>Left / Right</span><output data-testid="horizontal-spacing"
+                >{spacing(margins.left)} / {spacing(margins.right)}</output
+              >
+            </div>
+            <div>
+              <span>Top / Bottom</span><output data-testid="vertical-spacing"
+                >{spacing(margins.top)} / {spacing(margins.bottom)}</output
+              >
+            </div>
+          </div>
+          <p class="hint">
+            Measured to the visible edge, including the outline stroke. X/Y changes are local
+            previews.
+          </p>
+        </div>
+      </section>
     </div>
-    <fieldset class="setting">
-      <legend class="field-label">Surface</legend>
-      <div class="segmented">
-        <button aria-pressed={surface === 'light'} onclick={() => (surface = 'light')}>Light</button
-        ><button aria-pressed={surface === 'dark'} onclick={() => (surface = 'dark')}>Dark</button>
+    <section
+      class="optical-row"
+      aria-label={iconName + ' optical sizes'}
+      class:dark={surface === 'dark'}
+      style:color
+    >
+      <span class="optical-title">Actual size</span>
+      <div class="sizes">
+        {#each [16, 20, 24, 48] as size}<div class="size-sample">
+            <div>
+              <StaticIconPreview
+                icon={selectedIcon}
+                {kind}
+                {size}
+                x={sizeX}
+                y={sizeY}
+                strokeWidth={stroke}
+              />
+            </div>
+            <span class="mono">{size}px</span>
+          </div>{/each}
       </div>
-    </fieldset>
-    <fieldset class="setting">
-      <legend class="field-label">Color</legend>
-      <div class="ink-options">
+      <span class="optical-note">{kind} · {sizeX}% × {sizeY}%</span>
+    </section>
+    <section class="comparison-section" aria-labelledby="style-heading">
+      <div class="section-heading">
+        <h2 id="style-heading">Compare styles</h2>
+        <span>Same scale and X/Y settings</span>
+      </div>
+      <div class="comparison-grid">
+        {#each ['outline', 'filled'] as style}<article
+            data-testid={'style-' + style}
+            class:selected={kind === style}
+          >
+            <div class="comparison-heading">
+              <h3>{style === 'outline' ? 'Outline' : 'Filled'}</h3>
+              <span>{style === 'outline' ? 'Adjustable stroke' : 'Adjustable inner gap'}</span>
+            </div>
+            <div class="comparison-preview">
+              {#if style === 'outline' || hasFilled}<StaticIconPreview
+                  icon={selectedIcon}
+                  kind={style as 'outline' | 'filled'}
+                  size={72}
+                  x={sizeX}
+                  y={sizeY}
+                  color="#4f46e5"
+                  strokeWidth={stroke}
+                  label={'Compare ' + style + ' ' + iconName}
+                />{:else}<span class="pending-style">Filled study not drawn yet</span>{/if}
+            </div>
+            <button
+              disabled={style === 'filled' && !hasFilled}
+              aria-pressed={kind === style}
+              onclick={() => (kind = style as 'outline' | 'filled')}
+              >{style === 'filled' && !hasFilled
+                ? 'Coming later'
+                : kind === style
+                  ? 'Selected'
+                  : 'Use style'}<span aria-hidden="true">{kind === style ? '✓' : '↗'}</span></button
+            >
+          </article>{/each}
+      </div>
+    </section>
+    <details class="review-details">
+      <summary>Visual checks <span>Geometry, weight and spacing</span></summary>
+      <div class="review-panel">
+        {#each ['Recognizable at 16px', 'Clean edges without doubled strokes', 'Balanced opposite spacing', 'Outline and filled feel like one family'] as item}<label
+            class="review-check"
+            ><input type="checkbox" value={item} bind:group={checked} /><span>{item}</span></label
+          >{/each}
+        <div class="review-count">
+          <span class="mono">{checked.length} / 4 REVIEWED</span><span>This session only</span>
+        </div>
+      </div>
+    </details>
+  </div>
+  <aside class="icon-sidebar" aria-label="Icon list">
+    <div class="sidebar-heading">
+      <h2>Icons</h2>
+      <span>{catalog.length}</span>
+    </div>
+    <div class="icon-list">
+      {#each catalog as item}
         <button
-          class="swatch ink"
-          aria-label="Ink color"
-          aria-pressed={ink === 'ink'}
-          onclick={() => (ink = 'ink')}
-        ></button><button
-          class="swatch indigo"
-          aria-label="Indigo color"
-          aria-pressed={ink === 'indigo'}
-          onclick={() => (ink = 'indigo')}
-        ></button><span>{ink === 'ink' ? 'Ink' : 'Indigo'}</span>
-      </div>
-    </fieldset>
-    <label class="switch-row"
-      ><span>Drawing grid</span><input type="checkbox" bind:checked={grid} /></label
-    ><label class="switch-row"
-      ><span>Spacing guides</span><input type="checkbox" bind:checked={guides} /></label
-    >
-    <button class="reset-button" onclick={reset}
-      >Reset geometry <span aria-hidden="true">↺</span></button
-    >
+          class="icon-item"
+          aria-pressed={selectedIcon === item.name}
+          aria-label={'Select ' + item.name}
+          onclick={() => selectIcon(item.name)}
+        >
+          <span class="list-glyph"
+            ><item.component size={24} strokeWidth={strokeWeights.regular} /></span
+          >
+          <span class="list-name"
+            >{item.name[0].toUpperCase() + item.name.slice(1)}<small
+              class:approved={item.reviewStatus === 'approved'}
+              >{item.reviewStatus === 'approved' ? 'Approved' : 'Needs review'}</small
+            ></span
+          >
+          {#if selectedIcon === item.name}<span class="selection-dot" aria-hidden="true"
+            ></span>{/if}
+        </button>
+      {/each}
+    </div>
+    <p>Folder outline and filled approved.<br />Other icons await visual review.</p>
   </aside>
-  <section class="canvas-panel" aria-label="Static Folder workbench">
-    <div class="canvas-topline">
-      <span><b>folder</b><span class="muted"> / {kind}</span></span><span class="mono"
-        >24 × 24 · 7× PREVIEW</span
-      >
-    </div>
-    <div class="canvas" class:dark={surface === 'dark'} style:color>
-      <div class="drawing" class:gridded={grid} class:guided={guides}>
-        <span class="axis horizontal" aria-hidden="true"></span><span
-          class="axis vertical"
-          aria-hidden="true"
-        ></span>
-        <div data-testid="main-study">
-          <StaticFolderPreview
-            {kind}
-            x={sizeX}
-            y={sizeY}
-            {color}
-            strokeWidth={stroke}
-            label={'Folder ' + kind + ' preview'}
-            onmeasure={measure}
-          />
-        </div>
-        {#if guides}<span class="spacing top mono" data-testid="spacing-top"
-            >{margins.top.toFixed(3)}</span
-          ><span class="spacing bottom mono" data-testid="spacing-bottom"
-            >{margins.bottom.toFixed(3)}</span
-          ><span class="spacing left mono" data-testid="spacing-left"
-            >{margins.left.toFixed(3)}</span
-          ><span class="spacing right mono" data-testid="spacing-right"
-            >{margins.right.toFixed(3)}</span
-          >{/if}
-      </div>
-      <div class="canvas-status">
-        <span class="status-dot"></span>{kind === 'outline' ? 'Outline' : 'Filled'}<span
-          >{margins.width.toFixed(2)} × {margins.height.toFixed(2)} units</span
-        >
-        {#if kind === 'filled'}<span data-testid="filled-gap"
-            >Gap {(margins.gap ?? stroke).toFixed(2)} units</span
-          >{/if}
-      </div>
-    </div>
-    <div class="spacing-panel">
-      <div class="spacing-title">
-        <span>Visible spacing</span><span
-          class:balanced
-          class="balance-state"
-          data-testid="balance-state"
-          >{balanced ? 'Opposite sides balanced' : 'Review alignment'}</span
-        >
-      </div>
-      <div class="spacing-values">
-        <div>
-          <span>Left / Right</span><output data-testid="horizontal-spacing"
-            >{margins.left.toFixed(3)} / {margins.right.toFixed(3)}</output
-          >
-        </div>
-        <div>
-          <span>Top / Bottom</span><output data-testid="vertical-spacing"
-            >{margins.top.toFixed(3)} / {margins.bottom.toFixed(3)}</output
-          >
-        </div>
-      </div>
-      <p class="hint">
-        Measured to the visible edge, including the outline stroke. X/Y changes are local previews.
-      </p>
-    </div>
-  </section>
 </div>
-<section
-  class="optical-row"
-  aria-label="Folder optical sizes"
-  class:dark={surface === 'dark'}
-  style:color
->
-  <span class="optical-title">Actual size</span>
-  <div class="sizes">
-    {#each [16, 20, 24, 48] as size}<div class="size-sample">
-        <div><StaticFolderPreview {kind} {size} x={sizeX} y={sizeY} strokeWidth={stroke} /></div>
-        <span class="mono">{size}px</span>
-      </div>{/each}
-  </div>
-  <span class="optical-note">{kind} · {sizeX}% × {sizeY}%</span>
-</section>
-<section class="comparison-section" aria-labelledby="style-heading">
-  <div class="section-heading">
-    <h2 id="style-heading">Compare styles</h2>
-    <span>Same scale and X/Y settings</span>
-  </div>
-  <div class="comparison-grid">
-    {#each ['outline', 'filled'] as style}<article
-        data-testid={'style-' + style}
-        class:selected={kind === style}
-      >
-        <div class="comparison-heading">
-          <h3>{style === 'outline' ? 'Outline' : 'Filled'}</h3>
-          <span>{style === 'outline' ? 'Adjustable stroke' : 'Adjustable inner gap'}</span>
-        </div>
-        <div class="comparison-preview">
-          <StaticFolderPreview
-            kind={style as 'outline' | 'filled'}
-            size={72}
-            x={sizeX}
-            y={sizeY}
-            color="#4f46e5"
-            strokeWidth={stroke}
-            label={'Compare ' + style + ' Folder'}
-          />
-        </div>
-        <button aria-pressed={kind === style} onclick={() => (kind = style as 'outline' | 'filled')}
-          >{kind === style ? 'Selected' : 'Use style'}<span aria-hidden="true"
-            >{kind === style ? '✓' : '↗'}</span
-          ></button
-        >
-      </article>{/each}
-  </div>
-</section>
-<details class="review-details">
-  <summary>Visual checks <span>Geometry, weight and spacing</span></summary>
-  <div class="review-panel">
-    {#each ['Recognizable at 16px', 'Clean edges without doubled strokes', 'Balanced opposite spacing', 'Outline and filled feel like one family'] as item}<label
-        class="review-check"
-        ><input type="checkbox" value={item} bind:group={checked} /><span>{item}</span></label
-      >{/each}
-    <div class="review-count">
-      <span class="mono">{checked.length} / 4 REVIEWED</span><span>This session only</span>
-    </div>
-  </div>
-</details>
 
 <style>
+  .lab-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px;
+    gap: 24px;
+    align-items: start;
+  }
+  .editor {
+    min-width: 0;
+  }
+  .icon-sidebar {
+    position: sticky;
+    top: 28px;
+    padding: 16px 0 0 20px;
+    border-left: 1px solid #e4e4e7;
+  }
+  .sidebar-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 8px 16px;
+  }
+  .sidebar-heading h2 {
+    font-size: 13px;
+    font-weight: 550;
+    margin: 0;
+  }
+  .sidebar-heading > span {
+    font-size: 11px;
+    color: #a1a1aa;
+  }
+  .icon-list {
+    display: grid;
+    gap: 5px;
+  }
+  .icon-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    gap: 11px;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    padding: 10px 8px;
+    text-align: left;
+    background: transparent;
+    color: #71717a;
+  }
+  .icon-item:hover {
+    background: #fafafa;
+    color: #27272a;
+  }
+  .icon-item[aria-pressed='true'] {
+    background: #f5f5ff;
+    border-color: #e0e0ff;
+    color: #4f46e5;
+  }
+  .list-glyph {
+    display: grid;
+    place-items: center;
+  }
+  .list-name {
+    font-size: 12px;
+    color: #27272a;
+  }
+  .list-name small {
+    display: block;
+    font-size: 9px;
+    color: #a1a1aa;
+    margin-top: 3px;
+  }
+  .list-name small.approved {
+    color: #6366f1;
+  }
+  .selection-dot {
+    margin-left: auto;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #6366f1;
+  }
+  .icon-sidebar p {
+    font-size: 10px;
+    line-height: 1.7;
+    color: #a1a1aa;
+    margin: 20px 8px 0;
+  }
+  .pending-style {
+    font-size: 12px;
+    color: #a1a1aa;
+  }
+  .weight-presets {
+    margin-bottom: 10px;
+  }
+  button:disabled {
+    cursor: default;
+    opacity: 0.4;
+  }
+
   .lab-heading {
     display: flex;
     justify-content: space-between;
@@ -412,30 +590,6 @@
     color: #71717a;
     font-size: 12px;
     margin-bottom: 8px;
-  }
-  select {
-    width: 100%;
-    border: 1px solid #e4e4e7;
-    border-radius: 6px;
-    padding: 8px;
-    background: white;
-    color: #27272a;
-    font-size: 12px;
-    min-height: 36px;
-  }
-  .icon-select {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-  .icon-select :global(svg) {
-    position: absolute;
-    left: 10px;
-    color: #6366f1;
-    pointer-events: none;
-  }
-  .icon-select select {
-    padding-left: 40px;
   }
   fieldset {
     border: 0;

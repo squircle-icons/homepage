@@ -37,8 +37,8 @@ test('static Lab renders actual outline and filled exports without motion contro
       .locator('.size-sample svg')
       .evaluateAll((elements) => elements.map((item) => item.getAttribute('width'))),
   ).toEqual(['16', '20', '24', '48']);
-  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.125 / 4.125');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.150 / 2.150');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.450 / 3.450');
   expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
   for (const width of [1280, 1440]) {
     await page.setViewportSize({ width, height: 1000 });
@@ -63,23 +63,23 @@ test('independent X/Y sizing keeps the outline stroke constant and reports actua
   const path = main(page).locator('path').first();
   const originalStroke = await path.evaluate((element) => getComputedStyle(element).strokeWidth);
   await size(page, 'X', 75);
-  await size(page, 'Y', 90);
+  await size(page, 'Y', 85);
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('75');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('90');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('85');
   expect(await path.evaluate((element) => getComputedStyle(element).strokeWidth)).toBe(
     originalStroke,
   );
-  await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.375 / 4.375');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.825 / 4.825');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.400 / 4.400');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.605 / 4.605');
   await page.getByRole('button', { name: 'Increase stroke width' }).click();
-  await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '2');
-  await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.250 / 4.250');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.700 / 4.700');
+  await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '1.95');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.275 / 4.275');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.480 / 4.480');
   await balanced(page);
   if (info.project.name === 'chromium')
     await page.screenshot({ path: '.artifacts/previews/lab-static-xy.png', fullPage: true });
   await page.getByRole('button', { name: /Reset geometry/ }).click();
-  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.150 / 2.150');
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('100');
 });
 
@@ -122,13 +122,13 @@ test('filled Folder gap follows stroke width without changing the outer silhouet
   expect(expanded!.slice(0, expanded!.lastIndexOf(' M '))).toBe(outer);
   await expect(main(page).locator('svg')).toHaveAttribute('stroke', 'none');
   await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.125 / 4.125');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.338 / 3.338');
   await size(page, 'Y', 110);
   await expect(page.getByTestId('filled-gap')).toHaveText('Gap 2.50 units');
   await size(page, 'Y', 100);
 
   await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('4.125 / 4.125');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.338 / 3.338');
   await size(page, 'X', 80);
   await size(page, 'Y', 115);
   await balanced(page);
@@ -147,8 +147,8 @@ test('linked axes clamp together, step with buttons and reset cleanly', async ({
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('105');
   await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('105');
   await size(page, 'X', 500);
-  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('123.61');
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('123.61');
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('123.88');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('123.88');
   await expect(page.getByRole('button', { name: 'Increase size X', exact: true })).toBeDisabled();
   await size(page, 'Y', -50);
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('1');
@@ -174,7 +174,7 @@ test('surfaces, colors, guides and visual review work for both static styles', a
   await page.getByLabel('Spacing guides').uncheck();
   await expect(page.getByTestId('spacing-top')).toHaveCount(0);
   await page.getByLabel('Spacing guides').check();
-  await expect(page.getByTestId('spacing-top')).toHaveText('4.125');
+  await expect(page.getByTestId('spacing-top')).toHaveText('3.338');
   await page.locator('summary').filter({ hasText: 'Visual checks' }).click();
   await page.getByLabel('Recognizable at 16px').check();
   await expect(page.locator('.review-count')).toContainText('1 / 4 REVIEWED');
@@ -203,24 +203,101 @@ test('Y sizing follows the measured left margin instead of a fixed percentage ca
   page,
 }) => {
   await page.goto('/lab');
-  await size(page, 'Y', 125);
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('125');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('2.375 / 2.375');
-  await expect(page.getByTestId('y-limit')).toContainText('128.57%');
+  await size(page, 'Y', 116);
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('116');
+  await expect(page.getByTestId('y-limit')).toContainText('116.88%');
   await page.getByRole('button', { name: 'Match Y to left spacing' }).click();
-  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('128.57');
-  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.125 / 2.125');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('2.125 / 2.125');
+  await expect(page.getByRole('spinbutton', { name: 'Size Y', exact: true })).toHaveValue('116.88');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('2.150 / 2.150');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('2.150 / 2.150');
   await expect(page.getByRole('button', { name: 'Increase size Y', exact: true })).toBeDisabled();
   await size(page, 'X', 80);
-  await expect(page.getByTestId('horizontal-spacing')).toHaveText('3.925 / 3.925');
-  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.925 / 3.925');
+  await expect(page.getByTestId('horizontal-spacing')).toHaveText('3.950 / 3.950');
+  await expect(page.getByTestId('vertical-spacing')).toHaveText('3.950 / 3.950');
   await page.getByRole('button', { name: 'Filled', exact: true }).click();
-  await expect(page.getByTestId('y-limit')).toContainText('100.32%');
+  await expect(page.getByTestId('y-limit')).toContainText('91.20%');
   await expect(page.getByTestId('horizontal-spacing')).toHaveText('4.100 / 4.100');
   await expect(page.getByTestId('vertical-spacing')).toHaveText('4.100 / 4.100');
   await size(page, 'X', 120);
   await page.getByRole('button', { name: 'Outline', exact: true }).click();
   await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('120');
   await balanced(page);
+});
+
+test('stroke presets share Regular 1.70 as default while retaining fine adjustment', async ({
+  page,
+}) => {
+  await page.goto('/lab');
+  await expect(page.getByRole('button', { name: 'Regular', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '1.7');
+  for (const style of ['Outline', 'Filled']) {
+    await page.getByRole('button', { name: style, exact: true }).click();
+    for (const [name, weight] of [
+      ['Thin', '1.25'],
+      ['Regular', '1.7'],
+      ['Bold', '2.25'],
+    ]) {
+      await page.getByRole('button', { name, exact: true }).click();
+      await expect(main(page).locator('svg')).toHaveAttribute(
+        style === 'Outline' ? 'stroke-width' : 'data-cutout-width',
+        weight,
+      );
+      await expect(page.getByRole('button', { name, exact: true })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      );
+      await balanced(page);
+    }
+  }
+  await page.getByRole('slider', { name: 'Stroke width' }).fill('1.8');
+  await expect(page.getByRole('button', { name: 'Regular', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
+  await expect(
+    page.getByText('Stroke width sets the inner gap; the outside stays fixed.'),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: /Reset geometry/ }).click();
+  await expect(page.getByRole('button', { name: 'Regular', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+});
+
+test('right sidebar switches native icons and preserves independent review drafts', async ({
+  page,
+}) => {
+  await page.goto('/lab');
+  const sidebar = page.getByRole('complementary', { name: 'Icon list' });
+  await expect(sidebar.getByRole('button')).toHaveCount(6);
+  await expect(sidebar.getByRole('button', { name: 'Select folder', exact: true })).toContainText(
+    'Approved',
+  );
+  await size(page, 'X', 90);
+  await page.getByRole('button', { name: 'Filled', exact: true }).click();
+  await page.getByRole('button', { name: 'Bold', exact: true }).click();
+  for (const icon of ['camera', 'bell', 'heart', 'search', 'settings']) {
+    await sidebar.getByRole('button', { name: 'Select ' + icon, exact: true }).click();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      icon[0].toUpperCase() + icon.slice(1) + ' lab',
+    );
+    await expect(main(page).locator('svg')).toHaveAttribute('stroke-width', '1.7');
+    await expect(page.getByRole('button', { name: 'Filled', exact: true })).toBeDisabled();
+    await expect(page.getByText('Filled study not drawn yet')).toBeVisible();
+    await balanced(page);
+  }
+  await sidebar.getByRole('button', { name: 'Select folder', exact: true }).click();
+  await expect(page.getByRole('spinbutton', { name: 'Size X', exact: true })).toHaveValue('90');
+  await expect(page.getByRole('button', { name: 'Filled', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  await expect(page.getByRole('button', { name: 'Bold', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+  expect(await page.evaluate(() => document.getAnimations().length)).toBe(0);
 });

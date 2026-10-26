@@ -1,5 +1,6 @@
 <script module lang="ts">
   export type Margins = {
+    icon: string;
     variant: 'outline' | 'filled';
     gap?: number;
     left: number;
@@ -15,19 +16,21 @@
 
 <script lang="ts">
   import { tick } from 'svelte';
-  import Folder from 'squircle-icons-svelte/folder';
+  import { catalog } from '#lib/catalog.js';
   import FilledFolder from 'squircle-icons-svelte/filled/folder';
 
   let {
+    icon = 'folder',
     kind = 'outline',
     x = 100,
     y = 100,
-    strokeWidth = 1.75,
+    strokeWidth = 1.7,
     size = 168,
     color = 'currentColor',
     label,
     onmeasure,
   }: {
+    icon?: string;
     kind?: 'outline' | 'filled';
     x?: number;
     y?: number;
@@ -38,14 +41,20 @@
     onmeasure?: (margins: Margins) => void;
   } = $props();
   let host = $state<HTMLDivElement>();
+  let centerX = $state(12);
+  let centerY = $state(12);
+  const Icon = $derived((catalog.find((entry) => entry.name === icon) ?? catalog[0]).component);
 
   $effect(() => {
+    icon;
     kind;
+    centerX;
+    centerY;
     x;
     y;
     strokeWidth;
     size;
-    if (!host || !onmeasure) return;
+    if (!host) return;
     let active = true;
     void tick().then(() => {
       if (!active) return;
@@ -64,7 +73,18 @@
       const sourceHeight =
         Math.max(...sources.map((box) => box.y + box.height)) -
         Math.min(...sources.map((box) => box.y));
+      const nextCenterX = Math.min(...sources.map((box) => box.x)) + sourceWidth / 2;
+      const nextCenterY = Math.min(...sources.map((box) => box.y)) + sourceHeight / 2;
+      if (
+        Math.abs(centerX - nextCenterX) > 0.000001 ||
+        Math.abs(centerY - nextCenterY) > 0.000001
+      ) {
+        centerX = nextCenterX;
+        centerY = nextCenterY;
+        return;
+      }
       onmeasure?.({
+        icon,
         variant: kind,
         gap:
           kind === 'filled' && svg.hasAttribute('data-cutout-width')
@@ -90,11 +110,13 @@
   class="glyph"
   class:outline={kind === 'outline'}
   bind:this={host}
+  style:--offset-x={`${((12 - centerX) * x) / 100}px`}
+  style:--offset-y={`${((12 - centerY) * y) / 100}px`}
   style:--scale-x={x / 100}
   style:--scale-y={y / 100}
   style:--preview-stroke={`${(strokeWidth * size) / 24}px`}
 >
-  {#if kind === 'outline'}<Folder {size} {color} {strokeWidth} {label} />{:else}<FilledFolder
+  {#if kind === 'outline'}<Icon {size} {color} {strokeWidth} {label} />{:else}<FilledFolder
       {size}
       {color}
       strokeWidth={strokeWidth / (y / 100)}
@@ -111,7 +133,7 @@
   .glyph :global(svg > g) {
     transform-box: view-box;
     transform-origin: 12px 12px;
-    transform: scale(var(--scale-x), var(--scale-y));
+    transform: translate(var(--offset-x), var(--offset-y)) scale(var(--scale-x), var(--scale-y));
   }
   /* Preserve the chosen stroke in screen pixels when X/Y scale independently.
      Include the preview magnification, so the same 24-unit weight is visible

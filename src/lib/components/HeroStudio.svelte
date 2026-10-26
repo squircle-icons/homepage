@@ -5,7 +5,7 @@
   let view = $state<'collection' | 'motion' | 'code'>('collection');
   let selected = $state('camera');
   let indigo = $state(false);
-  let stroke = $state(1.75);
+  let stroke = $state(1.7);
   let open = $state(false);
   let bell = $state<{ play(): void; reset(): void }>();
   const current = $derived(catalog.find((icon) => icon.name === selected)!);

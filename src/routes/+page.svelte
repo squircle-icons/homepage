@@ -118,7 +118,7 @@
         </div>
         <div class="drawing-notes">
           <span><strong>24 × 24</strong>Drawing grid</span><span
-            ><strong>1.75</strong>Default stroke</span
+            ><strong>1.70</strong>Default stroke</span
           ><span><strong>Just enough.</strong>Room to breathe</span>
         </div>
       </div>

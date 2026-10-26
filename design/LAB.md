@@ -1,24 +1,22 @@
-# Static Folder lab
+# Static icon lab
 
-`/lab` is a desktop workbench for reviewing icon geometry. It imports real Outline and Filled Folder components from the pinned Svelte package. There is no app bar, mobile layout, timeline, playback control or animation controller in this page. Motion development is paused.
+`/lab` is a desktop workbench for reviewing geometry using native exports from the pinned Svelte package. Motion work is paused; there is no app bar, timeline, or playback control.
 
 ## Review flow
 
-1. Choose Outline or Filled. Stroke width controls the Outline line weight and the Filled negative-space divider. Filled remains fill-only; changing the gap never adds an outside stroke or changes the outer contour.
-2. Adjust Size X and Size Y with their step buttons or number fields. These are percentages of the original source geometry, with limits calculated from measured source geometry and the 24-unit artboard. Link proportions when both axes should resize together. Reset geometry restores 100% / 100% and Outline weight 1.75.
-3. Use the current left margin as the Y reference. The Y limit is the height at which top/bottom equal left/right; Outline Folder at X=100% reaches 128.57%, and Filled reaches about 125.40%. “Match Y to left spacing” sets the exact value. X is bounded by available artboard space including stroke, rather than a shared percentage ceiling. Linked resizing preserves the current shape ratio within the artboard.
-4. Inspect the spacing readout. Left equals right and top equals bottom; the two pairs may differ to preserve the real object's proportions. At the source size and default Outline weight, both styles have visible left/right padding of 2.125 units and top/bottom padding of 4.125 units. Readouts include Outline stroke, and update from actual rendered SVG bounds.
-5. Compare both styles at the same scale, then inspect the 16/20/24/48px samples in light and dark. Use ink or indigo and toggle grid/spacing guides as needed.
-6. Use the session-only visual checklist. No selection or preview adjustment automatically approves or saves a drawing.
+1. Select an icon from the right sidebar. Folder Outline and Filled are owner-approved; the remaining five Outline icons await review. Filled is disabled until a separately authored variant exists. Each icon retains its current draft settings while switching within this page session.
+2. Select Thin (1.25), Regular / default (1.70), or Bold (2.25). The slider and step buttons retain fine adjustment. In Outline this controls line weight; in Filled Folder it controls the negative-space divider while the outside contour stays fixed.
+3. Adjust X/Y independently or link proportions. Values are percentages of the source. Reset restores 100% / 100% and Regular. The approved Folder's earlier Y=110% preview has been baked into its source, so its approved shape now displays at 100%.
+4. Use the left margin as the Y reference. The Y limit makes top/bottom equal left/right; “Match Y to left spacing” sets the exact value. X is limited by the artboard and stroke. Linked resizing preserves the current ratio within the artboard.
+5. Inspect measured spacing and actual-size 16/20/24/48px samples. Opposite sides match in pairs; horizontal and vertical padding may differ to preserve the object's proportions. At default size, approved Outline Folder has 2.150 horizontal and 3.450 vertical padding; Filled has 2.125 and 3.3375 respectively.
+6. Compare available styles on light/dark surfaces, with ink/indigo colors. The visual checklist and draft adjustments are session-only. They do not approve or rewrite source artwork.
 
-Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/DESIGN_RULES.md). Folder is the first filled review candidate; no other filled icon is implied. Approved geometry must still be authored in core, then synchronized through Svelte into homepage.
+Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/DESIGN_RULES.md). New approved geometry must be authored in core and synchronized through Svelte into homepage.
 
 ## Preview ownership
 
-`StaticFolderPreview.svelte` renders native package exports. It does not copy paths. Centered CSS transforms on the static groups preview independent X/Y changes. Outline paths use non-scaling strokes with the display magnification included, so stretching a shape does not stretch its selected line weight. Filled glyphs have no outside stroke. Their counter is generated from a named, validated source part and follows strokeWidth. The preview compensates for Y scaling to preserve the selected gap thickness; if an extremely short shape cannot fit it, the source gap is bounded to 0.25–6 units and the actual displayed gap is reported. At non-default sizes or stroke weights, the two styles can have different outer bounds; the measured margins expose that difference.
-
-SVG measurements happen after mount/update with a cancelable tick. There are no animation frames, motion styles/controllers, preference listeners or persistent storage. UI changes do not rewrite source SVGs or generated components.
+`StaticIconPreview.svelte` renders package exports without copying paths. It centers native artwork bounds and applies X/Y transforms only in the preview. Outline paths use non-scaling strokes including display magnification. Filled Folder's validated counter compensates for Y scaling to retain the chosen gap; at extreme heights the source gap is bounded to 0.25–6 units and the readout reports the actual gap. Source measurements happen after mount/update through a cancelable tick. There are no motion controllers or media-query listeners.
 
 ## Verification
 
-Run `pnpm verify`. Seven Lab scenarios run in Chromium, Firefox and WebKit: static SSR/no playback, independent X/Y and preserved strokes, real filled cutouts, linked sizing/clamps/reset, left-margin-derived Y limits and matching, surface/color/guides/review, and balanced opposite margins across styles and weights. Desktop captures are generated under `.artifacts/previews/lab-static-*.png`; they support human review and are not pixel baselines.
+Run `pnpm verify`. Nine Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual-size samples, independent and linked sizing, balanced margins, geometry-derived limits, filled counters, presets and fine adjustment, sidebar switching and per-icon drafts, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.

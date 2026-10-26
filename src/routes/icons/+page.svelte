@@ -6,7 +6,7 @@
   let query = $state('');
   let size = $state(24);
   let color = $state('#27272a');
-  let strokeWidth = $state(1.75);
+  let strokeWidth = $state(1.7);
   let selected = $state('camera');
   let hover = $state(false);
   let open = $state(false);

@@ -1,15 +1,16 @@
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { format, resolveConfig } from 'prettier';
+const packageCatalog = JSON.parse(
+  await readFile(fileURLToPath(import.meta.resolve('squircle-icons-svelte/catalog.json')), 'utf8'),
+);
 const icons: {
   name: string;
   description: string;
   tags: string[];
   authorship: string;
   construction: string;
-}[] = JSON.parse(
-  await readFile(fileURLToPath(import.meta.resolve('squircle-icons-svelte/catalog.json')), 'utf8'),
-).icons;
+}[] = packageCatalog.icons;
 const pascal = (name: string) =>
   name
     .split('-')
@@ -25,7 +26,8 @@ const content = await format(
     icons
       .map((icon) => `{ ...${JSON.stringify(icon)}, component: ${pascal(icon.name)} }`)
       .join(',\n') +
-    '\n];\n',
+    '\n];\n' +
+    `export const strokeWeights = ${JSON.stringify(packageCatalog.strokeWeights)};\n`,
   { ...(await resolveConfig('.prettierrc.json')), filepath: fileURLToPath(destination) },
 );
 if (process.argv.includes('--check')) {

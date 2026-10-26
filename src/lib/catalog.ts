@@ -14,6 +14,10 @@ export const catalog = [
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
         'Original bell shoulder curve transitions into nearly vertical walls. Broad lower lip balances the narrow crown.',
+      styles: ['outline'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'draft',
     },
     component: Bell,
   },
@@ -25,6 +29,10 @@ export const catalog = [
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
         'Original Bézier body: shoulders taper into a raised shutter housing; lens is optically lowered to 12.9.',
+      styles: ['outline'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'draft',
     },
     component: Camera,
   },
@@ -36,7 +44,19 @@ export const catalog = [
       tags: ['files', 'directory'],
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
-        'Original horizontal folder silhouette with one outer contour and a recognizable tab. Bounds x=3..21 and y=5..19 preserve the rectangular aspect ratio: at stroke 1.75, visible left/right padding is 2.125 units and top/bottom padding is 4.125 units. Opposite sides match exactly; horizontal and vertical pairs may differ. The front-panel upper edge is a single straight stroke at y=11, without retracing the sides or bottom. Existing body/lid names, stroke defaults and motion recipe are retained for static review.',
+        'Owner-approved horizontal Folder. Single rounded outer contour with a straight front-panel edge at y=10.9. Bounds x=3..21, y=4.3..19.7; default stroke is 1.7, with visible left/right padding 2.15 and top/bottom 3.45. The approved X=100%, Y=110% geometry is baked into the path coordinates, preserving constant stroke width and the existing part names.',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-26',
+        style: 'outline',
+        preview: { x: 100, y: 110, strokeWidth: 1.7 },
+        note: 'Owner approved both styles. Y scaling and constant stroke/gap have been baked into the source; the approved shape is now 100% in the Lab.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: 1.7,
+      reviewStatus: 'approved',
     },
     component: Folder,
   },
@@ -48,6 +68,10 @@ export const catalog = [
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
         'Original symmetric lobes with a shallow notch and curved lower point; no rounded-square frame.',
+      styles: ['outline'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'draft',
     },
     component: Heart,
   },
@@ -59,6 +83,10 @@ export const catalog = [
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
         'Original construction from a circle centered at 10.4 and a 45-degree handle. Circular geometry preserves immediate recognition.',
+      styles: ['outline'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'draft',
     },
     component: Search,
   },
@@ -70,7 +98,12 @@ export const catalog = [
       authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
       construction:
         'Original six-tooth outline with Bézier shoulders. The gear stays recognizable rather than forcing a squircle silhouette.',
+      styles: ['outline'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'draft',
     },
     component: Settings,
   },
 ];
+export const strokeWeights = { thin: 1.25, regular: 1.7, bold: 2.25 };

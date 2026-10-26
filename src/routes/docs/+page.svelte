@@ -1,7 +1,7 @@
 <script lang="ts">
   const examples = [
     '# In the svelte repository:\npnpm install --frozen-lockfile\npnpm build\npnpm pack --pack-destination .artifacts\n\n# In your Svelte 5 application:\npnpm add /absolute/path/to/squircle-icons-svelte-0.0.0.tgz',
-    '<script lang="ts">\n  import Camera from \'squircle-icons-svelte/camera\';\n<\/script>\n\n<Camera size={24} color="currentColor" strokeWidth={1.75} />\n<Camera size={20} label="Camera" />',
+    '<script lang="ts">\n  import Camera from \'squircle-icons-svelte/camera\';\n<\/script>\n\n<Camera size={24} color="currentColor" strokeWidth={1.70} />\n<Camera size={20} label="Camera" />',
     "<script lang=\"ts\">\n  import Folder from 'squircle-icons-svelte/animated/folder';\n  import Bell from 'squircle-icons-svelte/animated/bell';\n  let open = $state(false);\n  let bell: { play(): void; reset(): void };\n<\/script>\n\n<button onclick={() => open = !open} aria-expanded={open}>\n  <Folder {open} /> Files\n</button>\n<button onclick={() => bell.play()}>\n  <Bell bind:this={bell} /> Preview notification\n</button>",
     '<!-- The button already has a name; the icon is decorative. -->\n<button aria-label="Take a photo"><Camera /></button>\n\n<!-- The icon itself conveys meaning. -->\n<Camera label="Camera available" />',
     '# Run in each repository:\npnpm verify\n\n# In svelte, after committing a core change:\npnpm sync:core ../core\n\n# In homepage, after committing an adapter change:\npnpm sync:svelte ../svelte',
@@ -69,7 +69,7 @@
                 >Stroke color. Inherits text color by default.</td
               ></tr
             ><tr
-              ><td><code>strokeWidth</code></td><td><code>1.75</code></td><td
+              ><td><code>strokeWidth</code></td><td><code>1.70</code></td><td
                 >Stroke width in the 24-unit drawing grid.</td
               ></tr
             ><tr
@@ -169,7 +169,7 @@
       </p>
       <pre><code>{examples[4]}</code></pre>
       <p>
-        The 24×24 grid, 1.75 stroke, optical padding, and curvature are proposals awaiting visual
+        The 24×24 grid, 1.70 stroke, optical padding, and curvature are proposals awaiting visual
         review. Refer to CONTRIBUTING and the architecture notes for the relevant repository before
         changing the data model or adapter.
       </p>

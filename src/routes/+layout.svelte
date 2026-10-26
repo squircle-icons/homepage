@@ -50,8 +50,8 @@
 
 <style>
   .site-shell.lab-shell {
-    max-width: 1320px;
-    min-width: 1000px;
+    max-width: 1440px;
+    min-width: 1100px;
     padding: 28px 32px 48px;
   }
   :global(*) {

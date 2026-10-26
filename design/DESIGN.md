@@ -2,7 +2,7 @@
 
 **Awaiting owner review. These are working rules, not an approved visual identity.**
 
-Use a 24×24 drawing grid, default stroke 1.75, and approximately two drawing units of optical padding. The padding is optical rather than a rigid mathematical box; bell's clapper and heart's lobes may overshoot to balance perceived weight. Stroke scales with the SVG, with no non-scaling-stroke behavior in v1.
+Use a 24×24 drawing grid, default Regular stroke 1.70 (Thin 1.25, Bold 2.25), and approximately two drawing units of optical padding. The padding is optical rather than a rigid mathematical box; bell's clapper and heart's lobes may overshoot to balance perceived weight. Stroke scales with the SVG, with no non-scaling-stroke behavior in v1.
 
 Use continuous Bézier transitions where a silhouette benefits from softness. Rounded caps and joins support the drawing but do not define its character by themselves. The squircle idea applies to the form, never to a compulsory frame around every symbol. Lens, search, gear, and heart retain their recognizable geometry.
 
