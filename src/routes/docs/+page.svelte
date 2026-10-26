@@ -175,7 +175,7 @@
       </p>
       <p class="callout">
         Next decision: review the six silhouettes and motion studies before adding more icons or
-        another framework. The final name and license are still open.
+        another framework. The final package name is still open; the project uses the MIT license.
       </p>
     </section>
   </div>
