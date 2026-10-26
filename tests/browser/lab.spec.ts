@@ -467,3 +467,45 @@ test('preview zoom enlarges inspection without changing artwork or actual-size s
   await page.keyboard.press('ArrowRight');
   await expect.poll(() => viewport.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
 });
+
+test('drawing grid, guides and SVG coordinate center coincide at every preview zoom', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1365, height: 1000 });
+  await page.goto('/lab');
+  await page.getByRole('button', { name: 'Select heart', exact: true }).click();
+  await size(page, 'X', 95);
+  await size(page, 'Y', 95);
+  for (const style of ['Outline', 'Filled']) {
+    await page.getByRole('button', { name: style, exact: true }).click();
+    for (const grid of [true, false]) {
+      await page.getByLabel('Drawing grid', { exact: true }).setChecked(grid);
+      for (const zoom of [4, 7, 11, 14, 24]) {
+        await page.getByRole('slider', { name: 'Preview zoom', exact: true }).fill(String(zoom));
+        const result = await page.evaluate(() => {
+          const drawing = document.querySelector('.drawing')!;
+          const box = drawing.getBoundingClientRect();
+          const svg = document.querySelector('[data-testid="main-study"] svg') as SVGSVGElement;
+          const coordinate = new DOMPoint(12, 12).matrixTransform(svg.getScreenCTM()!);
+          const center = (selector: string) => {
+            const r = document.querySelector(selector)!.getBoundingClientRect();
+            return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+          };
+          const step = parseFloat(getComputedStyle(drawing).backgroundSize);
+          return {
+            coordinate: { x: coordinate.x, y: coordinate.y },
+            drawing: { x: box.x + box.width / 2, y: box.y + box.height / 2 },
+            horizontal: center('.axis.horizontal'),
+            vertical: center('.axis.vertical'),
+            gridCells: Number.isFinite(step) ? box.width / step : null,
+          };
+        });
+        for (const center of [result.drawing, result.horizontal, result.vertical]) {
+          expect(center.x).toBeCloseTo(result.coordinate.x, 2);
+          expect(center.y).toBeCloseTo(result.coordinate.y, 2);
+        }
+        if (grid) expect(result.gridCells).toBeCloseTo(24, 5);
+      }
+    }
+  }
+});

@@ -22,4 +22,10 @@ Follow the [core design rules](https://github.com/squircle-icons/core/blob/main/
 
 ## Verification
 
-Run `pnpm verify`. Thirteen Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual sizes, free independent X/Y above former limits, explicit spacing matching, filled counters, weight presets, all six icons and supported styles, per-icon drafts, positive/negative/full-turn rotation, margin measurement, independent zoom and scroll containment, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.
+Run `pnpm verify`. Fourteen Lab scenarios run in Chromium, Firefox and WebKit, covering SSR, actual sizes, free independent X/Y above former limits, explicit spacing matching, filled counters, weight presets, all six icons and supported styles, per-icon drafts, positive/negative/full-turn rotation, margin measurement, independent zoom and scroll containment, aligned grid/guide/SVG centers across zoom and styles, surfaces and review controls. Captures under `.artifacts/previews/` support human review; they are not pixel-comparison baselines.
+
+## Pixel inspection
+
+Use native 100% proportions and Regular 1.70 as the reference when comparing the authored Outline/Filled contours, then inspect actual 16/20/24px samples. Fractional preview sizes preserve Outline stroke width while scaling Filled geometry, so they can show small edge differences in addition to antialiasing. Magnification should expose shape defects, not require identical raster pixels at every zoom.
+
+The grid frame uses an inset shadow rather than a layout border. Its 24 cells and both guides are anchored to the SVG coordinate center (12,12); the frame must not shift the artwork by a pixel.

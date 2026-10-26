@@ -985,18 +985,22 @@
     display: grid;
     place-items: center;
     position: relative;
-    border: 1px solid transparent;
+    /* The frame must not reduce the SVG's layout box. */
   }
   .drawing.gridded {
-    border-color: #a5b4fc55;
+    box-shadow: inset 0 0 0 1px #a5b4fc55;
     background-image:
       linear-gradient(to right, #a5b4fc24 1px, transparent 1px),
       linear-gradient(to bottom, #a5b4fc24 1px, transparent 1px);
     background-size: var(--grid-step) var(--grid-step);
-    background-position: center;
+    /* A one-pixel grid stroke straddles each integer drawing coordinate. */
+    background-position: -0.5px -0.5px;
   }
   .axis {
     position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     pointer-events: none;
     display: none;
     background: #818cf844;
