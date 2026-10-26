@@ -44,14 +44,17 @@
       <span class="section-number mono">02 / STATIC ICONS</span>
       <h2>Import exactly what you use.</h2>
       <p>
-        Each icon has its own entry point. Static icons do not import the motion controller or
-        recipes.
+        Use a direct path for each icon. It limits the build graph to that component; static icons
+        import no motion controller or recipes. Animated paths include only the selected icon and
+        the motion helpers it needs.
       </p>
       <pre><code>{examples[1]}</code></pre>
       <p>
         You can also use named static exports: <code
           >import &#123; Camera &#125; from '@squircle-icons/svelte'</code
-        >. A production bundle check verifies that unused icons are removed.
+        >. Unused icons are removed from the final production bundle, but a build tool may still
+        compile other icons before removing them. Prefer direct paths to reduce compilation work.
+        The selected native Svelte component still compiles as part of your application.
       </p>
       <p>
         Five icons have a Filled entry point, such as <code
