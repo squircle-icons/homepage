@@ -1,74 +1,77 @@
 <script lang="ts">
-  import '@fontsource-variable/dm-sans';
+  import '#lib/theme.css';
+  import ThemeMenu from '#lib/components/ThemeMenu.svelte';
   import { page } from '$app/state';
   import type { Snippet } from 'svelte';
   let { children }: { children: Snippet } = $props();
-  const isLab = $derived(page.url.pathname === '/lab');
+  const isIcons = $derived(page.url.pathname === '/icons');
 </script>
 
 <svelte:head
-  ><title>Squircle Icons — Soft curves. Clear meaning.</title><meta
+  ><title>Squircle Icons — Soft edges. Rounded character.</title><meta
     name="description"
-    content="An original icon library with considered curves, native Svelte components, and purposeful motion. First collection, in progress."
+    content="An original icon library with considered curves, native Svelte components, and Outline/Filled styles. First collection, in progress."
   /></svelte:head
 >
-<div class="site-shell" class:lab-shell={isLab}>
-  {#if !isLab}
-    <header class="site-header">
-      <a class="brand" href="/" aria-label="Squircle Icons home"
-        ><span class="brand-symbol" aria-hidden="true"><span></span></span> squircle<span
-          class="brand-word">icons</span
-        ></a
-      >
+<header class="site-header">
+  <div class="header-content">
+    <a class="brand" href="/" aria-label="Squircle Icons home"
+      ><span class="brand-symbol" aria-hidden="true"><span></span></span> squircle<span
+        class="brand-word">icons</span
+      ></a
+    >
+    <div class="header-end">
       <nav aria-label="Main navigation">
-        <a href="/" aria-current={page.url.pathname === '/' ? 'page' : undefined}>Overview</a><a
-          href="/icons"
-          aria-current={page.url.pathname === '/icons' ? 'page' : undefined}
-          >Icons <span class="nav-count">6</span></a
-        ><a href="/docs" aria-current={page.url.pathname === '/docs' ? 'page' : undefined}>Docs</a>
-        <a href="/lab" aria-current={page.url.pathname === '/lab' ? 'page' : undefined}>Lab</a>
+        <a href="/icons" aria-current={isIcons ? 'page' : undefined}>Icons</a>
+        <a href="/docs" aria-current={page.url.pathname === '/docs' ? 'page' : undefined}>Docs</a>
       </nav>
-      <div class="header-end">
-        <span class="alpha-label">Alpha</span><a
-          href="https://github.com/squircle-icons/homepage"
-          target="_blank"
-          rel="noreferrer"
-          class="repo-link">GitHub <span aria-hidden="true">↗</span></a
-        >
-      </div>
-    </header>
-  {/if}
+      <ThemeMenu /><a
+        href="https://github.com/squircle-icons/homepage"
+        target="_blank"
+        rel="noreferrer"
+        class="repo-link">GitHub</a
+      >
+    </div>
+  </div>
+</header>
+<div class="site-shell" class:docs-shell={page.url.pathname === '/docs'}>
   <main>{@render children()}</main>
-  {#if !isLab}
+  {#if !isIcons}
     <footer>
-      <a class="footer-brand" href="/">Squircle Icons</a><span
-        >Drawn with intention. Built for Svelte.</span
-      ><span class="footer-note">Alpha stage · MIT license</span>
+      <div class="footer-identity">
+        <a class="footer-brand" href="/">© 2026 Squircle Icons</a>
+      </div>
+      <span>made with 🧡 by palamto</span>
+      <a class="footer-note" href="https://github.com/squircle-icons/homepage/blob/main/LICENSE"
+        >MIT license</a
+      >
     </footer>
   {/if}
 </div>
 
 <style>
-  .site-shell.lab-shell {
-    max-width: 1440px;
-    min-width: 1100px;
-    padding: 28px 32px 48px;
+  :global(:root) {
+    --site-header-height: 92px;
+  }
+  .site-shell.docs-shell footer,
+  .site-shell.docs-shell footer :is(a, span) {
+    font-size: 14px;
   }
   :global(*) {
     box-sizing: border-box;
   }
   :global(body) {
     margin: 0;
-    background: #ffffff;
-    color: #18181b;
+    background: var(--page);
+    color: var(--text);
     font-family:
-      'DM Sans Variable',
+      'Google Sans',
       ui-sans-serif,
       -apple-system,
       BlinkMacSystemFont,
       'Segoe UI',
       sans-serif;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
@@ -94,7 +97,7 @@
   :global(a:focus-visible),
   :global(input:focus-visible),
   :global(select:focus-visible) {
-    outline: 3px solid #6366f1;
+    outline: 3px solid var(--color-amber-500);
     outline-offset: 4px;
   }
   :global(h1),
@@ -120,9 +123,11 @@
     letter-spacing: -0.02em;
   }
   :global(code),
-  :global(pre),
+  :global(pre) {
+    font-family: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  }
   :global(.mono) {
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-variant-numeric: tabular-nums;
   }
   :global(code) {
     font-size: 0.86em;
@@ -132,9 +137,9 @@
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     padding: 22px;
-    border: 1px solid #e4e4e7;
-    background: #f4f4f5;
-    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface-subtle);
+    border-radius: var(--radius-card);
     font-size: 12px;
     line-height: 1.9;
   }
@@ -143,7 +148,7 @@
     letter-spacing: 0.15em;
     text-transform: uppercase;
     font-weight: 650;
-    color: #71717a;
+    color: var(--muted);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -154,10 +159,10 @@
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: #6366f1;
+    background: var(--color-amber-500);
   }
   :global(.muted) {
-    color: #71717a;
+    color: var(--muted);
   }
   :global(.button) {
     display: inline-flex;
@@ -165,33 +170,33 @@
     align-items: center;
     gap: 12px;
     padding: 12px 20px;
-    border: 1px solid #e4e4e7;
+    border: 1px solid var(--border);
     border-radius: 10px;
     font-size: 13px;
     font-weight: 550;
     background: transparent;
-    color: #27272a;
+    color: var(--text);
     transition: background 0.15s;
   }
   :global(.button:hover) {
-    background: #f4f4f5;
+    background: var(--surface-subtle);
   }
   :global(.button.primary) {
-    background: #4f46e5;
-    color: #ffffff;
-    border-color: #4f46e5;
+    background: var(--color-amber-500);
+    color: var(--accent-foreground);
+    border-color: var(--color-amber-500);
   }
   :global(.button.primary:hover) {
-    background: #4338ca;
+    background: var(--color-amber-500);
   }
   :global(.pill) {
     display: inline-flex;
     align-items: center;
-    border: 1px solid #e4e4e7;
+    border: 1px solid var(--border);
     padding: 3px 9px;
     border-radius: 6px;
     font-size: 10px;
-    color: #6366f1;
+    color: var(--accent-text);
     letter-spacing: 0.03em;
   }
   :global(.section-head) {
@@ -207,12 +212,12 @@
   :global(.section-head p) {
     margin: 8px 0 0;
     font-size: 14px;
-    color: #71717a;
+    color: var(--muted);
   }
   :global(.text-link) {
     font-size: 13px;
     font-weight: 550;
-    border-bottom: 1px solid #a5b4fc;
+    border-bottom: 1px solid var(--color-amber-500);
     padding-bottom: 3px;
   }
   :global(.page-heading) {
@@ -224,7 +229,7 @@
   }
   :global(.page-heading p) {
     max-width: 580px;
-    color: #71717a;
+    color: var(--muted);
     font-size: 16px;
   }
   .site-shell {
@@ -234,11 +239,23 @@
   }
   .site-header {
     height: 98px;
-    border-bottom: 1px solid #e4e4e7;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-content {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 20px;
+    height: 64px;
+    width: 100%;
+    max-width: 1280px;
+    padding: 0 48px;
+    margin: auto;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface) 45%, transparent);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 6%, transparent);
   }
   .brand {
     display: flex;
@@ -249,8 +266,8 @@
     letter-spacing: -0.06em;
   }
   .brand-word {
-    font-size: 13px;
-    color: #71717a;
+    font-size: 20px;
+    color: var(--muted);
     font-weight: 450;
     letter-spacing: -0.02em;
     margin-left: -4px;
@@ -259,7 +276,7 @@
     width: 29px;
     height: 29px;
     border-radius: 10px;
-    background: #4f46e5;
+    background: var(--color-amber-500);
     display: grid;
     place-items: center;
     transform: rotate(-4deg);
@@ -267,44 +284,28 @@
   .brand-symbol span {
     width: 13px;
     height: 13px;
-    border: 1.5px solid #eef2ff;
+    border: 1.5px solid var(--border);
     border-radius: 5px;
-  }
-  .site-header nav {
-    display: flex;
-    gap: 30px;
-    align-items: center;
-    font-size: 13px;
-    color: #71717a;
-  }
-  .site-header nav a {
-    padding: 12px 0;
-  }
-  .site-header nav a[aria-current] {
-    color: #4f46e5;
-    font-weight: 600;
-  }
-  .nav-count {
-    font-size: 10px;
-    background: #eef2ff;
-    color: #6366f1;
-    padding: 1px 5px;
-    border-radius: 4px;
-    margin-left: 3px;
   }
   footer {
     display: flex;
     align-items: center;
     gap: 26px;
-    border-top: 1px solid #e4e4e7;
+    border-top: 1px solid var(--border);
     margin-top: 80px;
     padding: 28px 0 34px;
-    color: #71717a;
-    font-size: 11px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .footer-identity {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
   }
   .footer-brand {
     font-weight: 650;
-    color: #27272a;
+    color: var(--text);
   }
   .footer-note {
     margin-left: auto;
@@ -315,15 +316,15 @@
     }
     .site-header {
       height: 80px;
+    }
+    .header-content {
+      padding: 0 22px;
       flex-wrap: wrap;
       gap: 8px;
       align-content: center;
     }
     .brand {
-      font-size: 18px;
-    }
-    .site-header nav {
-      gap: 18px;
+      font-size: 20px;
     }
     footer {
       flex-wrap: wrap;
@@ -354,14 +355,13 @@
     position: sticky;
     top: 0;
     z-index: 30;
-    height: 84px;
-    border-bottom: 1px solid #eeeef2;
-    background: #ffffffd9;
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    height: var(--site-header-height);
+    padding: 14px 24px;
+    border: 0;
+    background: transparent;
   }
   .brand {
-    font-size: 21px;
+    font-size: 20px;
     letter-spacing: -0.065em;
     font-weight: 650;
     gap: 10px;
@@ -373,75 +373,39 @@
     border-radius: 10px;
     transform: rotate(-5deg);
     box-shadow:
-      inset 0 1px #ffffff1f,
+      inset 0 1px color-mix(in srgb, var(--edge-highlight) 12.16%, transparent),
       0 2px 3px #18181b0d;
   }
   .brand-symbol span {
-    border-color: #f5f5ff;
+    border-color: var(--border);
   }
   .brand-word {
-    font-size: 12px;
+    font-size: 20px;
     font-weight: 400;
-    color: #92929e;
-  }
-  .site-header nav {
-    background: #f6f6f9;
-    border: 1px solid #ececf2;
-    border-radius: 99px;
-    padding: 4px;
-    gap: 2px;
-    font-size: 11px;
-    box-shadow: inset 0 1px #fff;
-  }
-  .site-header nav a {
-    padding: 7px 18px;
-    border-radius: 99px;
-    min-height: 32px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    transition:
-      background 0.18s,
-      color 0.18s;
-  }
-  .site-header nav a[aria-current] {
-    color: #fff;
-    background: #25252a;
-    font-weight: 450;
-    box-shadow: 0 2px 4px #18181b14;
-  }
-  .nav-count {
-    font-size: 8px;
-    background: #ececf3;
-    color: #a0a0ad;
-    margin-left: 0;
-    padding: 0 4px;
-    line-height: 1.6;
-  }
-  .site-header nav a[aria-current] .nav-count {
-    background: #ffffff24;
-    color: #d5d5ef;
+    color: var(--faint);
   }
   .header-end {
     display: flex;
     align-items: center;
     gap: 20px;
   }
-  .alpha-label {
-    font-size: 9px;
-    border: 1px solid #e5e7fb;
-    background: #f6f7ff;
-    color: #818cf8;
-    padding: 1px 7px;
-    border-radius: 5px;
+  .header-end nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+  .header-end nav a {
+    font-size: 14px;
+    color: var(--muted);
+    transition: color 150ms;
+  }
+  .header-end nav a:hover,
+  .header-end nav a[aria-current='page'] {
+    color: var(--text);
   }
   .repo-link {
-    font-size: 11px;
-    color: #7d7d89;
-  }
-  .repo-link > span {
-    margin-left: 4px;
-    color: #a5a5b5;
+    font-size: 14px;
+    color: var(--muted);
   }
   :global(h1),
   :global(h2),
@@ -456,12 +420,12 @@
     font-weight: 500;
     letter-spacing: 0.12em;
     gap: 8px;
-    color: #a2a2ae;
+    color: var(--faint);
   }
   :global(.eyebrow::before) {
     width: 4px;
     height: 4px;
-    background: #a5b4fc;
+    background: var(--color-amber-500);
   }
   :global(.button) {
     border-radius: 99px;
@@ -469,37 +433,37 @@
     font-weight: 450;
     min-height: 40px;
     padding: 10px 19px;
-    border-color: #e6e6ee;
-    background: #ffffff99;
+    border-color: var(--border);
+    background: color-mix(in srgb, var(--surface) 60%, transparent);
     transition:
       background 0.18s,
       transform 0.18s,
       box-shadow 0.18s;
   }
   :global(.button.primary) {
-    background: #242429;
-    color: #fff;
-    border-color: #242429;
+    background: var(--color-amber-500);
+    color: var(--accent-foreground);
+    border-color: var(--color-amber-500);
     box-shadow:
-      inset 0 1px #ffffff16,
+      inset 0 1px color-mix(in srgb, var(--edge-highlight) 8.63%, transparent),
       0 3px 6px #18181b09;
   }
   :global(.button.primary:hover) {
-    background: #37373e;
-    border-color: #37373e;
+    background: color-mix(in oklab, var(--color-amber-500) 92%, black);
+    border-color: color-mix(in oklab, var(--color-amber-500) 92%, black);
   }
   :global(.button:hover) {
-    background: #f6f6fb;
+    background: var(--surface-subtle);
   }
   :global(.text-link) {
     font-size: 12px;
     font-weight: 450;
-    border-color: #ddddec;
-    color: #7b7b8c;
+    border-color: var(--border);
+    color: var(--muted);
   }
   :global(.text-link:hover) {
-    color: #4f46e5;
-    border-color: #a5b4fc;
+    color: var(--accent-text);
+    border-color: var(--color-amber-500);
   }
   :global(.page-heading) {
     padding: 57px 0 38px;
@@ -514,7 +478,7 @@
   }
   :global(.page-heading p) {
     font-size: 15px;
-    color: #92929e;
+    color: var(--faint);
     line-height: 1.8;
   }
   :global(.page-heading .eyebrow) {
@@ -522,35 +486,39 @@
   }
   :global(.pill) {
     font-size: 8px;
-    border-color: #e4e5f3;
-    background: #fafaff;
-    color: #9393b3;
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--faint);
     border-radius: 5px;
     padding: 2px 7px;
     letter-spacing: 0.02em;
   }
   :global(pre) {
-    border-radius: 13px;
-    border-color: #e6e6ee;
-    background: #f7f7fa;
+    border-radius: var(--radius-card);
+    border-color: var(--border);
+    background: var(--surface-subtle);
   }
   footer {
     margin-top: 70px;
-    border-color: #eeeef3;
-    color: #a1a1ad;
-    font-size: 10px;
+    border-color: var(--border);
+    color: var(--muted);
+    font-size: 14px;
     padding: 27px 0 34px;
   }
   .footer-brand {
-    color: #777786;
+    color: var(--muted);
     font-weight: 500;
   }
   @media (max-width: 760px) {
+    :global(:root) {
+      --site-header-height: 84px;
+    }
     .site-header {
-      height: 76px;
+      height: var(--site-header-height);
+      padding: 14px 16px;
     }
     .brand {
-      font-size: 18px;
+      font-size: 20px;
       gap: 8px;
     }
     .brand-symbol {
@@ -563,21 +531,17 @@
       height: 12px;
     }
     .brand-word {
-      font-size: 10px;
-    }
-    .site-header nav {
-      font-size: 10px;
-      padding: 3px;
-    }
-    .site-header nav a {
-      padding: 6px 12px;
-      min-height: 29px;
+      font-size: 20px;
     }
     .header-end {
       display: none;
     }
-    .site-shell {
+    .site-shell,
+    .header-content {
       padding: 0 20px;
+    }
+    .header-content {
+      height: 56px;
     }
     :global(.page-heading) {
       padding-top: 37px;
@@ -591,7 +555,7 @@
     }
     footer {
       margin-top: 50px;
-      font-size: 9px;
+      font-size: 14px;
       gap: 9px 18px;
     }
   }

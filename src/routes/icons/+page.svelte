@@ -1,821 +1,1121 @@
 <script lang="ts">
-  import { catalog } from '#lib/catalog.ts';
-  import Folder from '@squircle-icons/svelte/animated/folder';
-  import Bell from '@squircle-icons/svelte/animated/bell';
+  import { onMount, tick } from 'svelte';
+  import * as Select from '#lib/components/ui/select/index.js';
+  import ColorPicker from '#lib/components/ColorPicker.svelte';
+  import { catalog, strokeWeights } from '#lib/public-catalog.js';
+  import { paginate } from '#lib/pagination.js';
+  import { serializeIconSvg } from '#lib/svg-export.js';
   import Search from '@squircle-icons/svelte/search';
+  import Check from '@squircle-icons/svelte/check';
+  import X from '@squircle-icons/svelte/x';
+  import Copy from '@squircle-icons/svelte/copy';
+  import Download from '@squircle-icons/svelte/download';
+  import Camera from '@squircle-icons/svelte/camera';
+
+  const categories = [
+    { id: 'all', label: 'All' },
+    { id: 'interface', label: 'Interface' },
+    { id: 'media', label: 'Media' },
+    { id: 'files', label: 'Files' },
+    { id: 'nature', label: 'Nature' },
+  ] as const;
+  type Category = (typeof categories)[number]['id'];
+  let category = $state<Category>('all');
+  function iconCategory(tags: string[]): Category {
+    if (tags.some((tag) => ['photo', 'image', 'video', 'audio'].includes(tag))) return 'media';
+    if (tags.some((tag) => ['files', 'directory', 'document'].includes(tag))) return 'files';
+    if (tags.some((tag) => ['weather', 'nature'].includes(tag))) return 'nature';
+    return 'interface';
+  }
+  function categoryKeys(event: KeyboardEvent, index: number) {
+    let next = index;
+    if (event.key === 'ArrowRight') next = (index + 1) % categories.length;
+    else if (event.key === 'ArrowLeft') next = (index - 1 + categories.length) % categories.length;
+    else if (event.key === 'Home') next = 0;
+    else if (event.key === 'End') next = categories.length - 1;
+    else return;
+    event.preventDefault();
+    category = categories[next].id;
+    document.getElementById(`category-${category}`)?.focus({ preventScroll: true });
+  }
   let query = $state('');
+  let currentPage = $state(1);
+  let search = $state<HTMLInputElement>();
+  let selected = $state(catalog[0]?.name ?? '');
+  let kind = $state<'outline' | 'filled'>('outline');
   let size = $state(24);
   let color = $state('#27272a');
-  let strokeWidth = $state(1.7);
-  let selected = $state('camera');
-  let hover = $state(false);
-  let open = $state(false);
-  let reducedMotion = $state<'system' | 'always'>('system');
-  let bell = $state<{ play(): void; reset(): void }>();
-  let folder = $state<{ reset(): void }>();
+  let customColor = $state(false);
+  let strokeWidth = $state(strokeWeights.regular);
+  let drawer = $state<HTMLDialogElement>();
+  let preview = $state<HTMLDivElement>();
+  let details = $state<HTMLDivElement>();
+  let previewSide = $state(140);
+  let closeButton = $state<HTMLButtonElement>();
+  let trigger: HTMLButtonElement | undefined;
+  let animateEntrance = $state(false);
+  let drawerOpen = $state(false);
+  let feedback = $state('');
+  let failed = $state(false);
+  let copying = $state(false);
+  let operation = 0;
+  let exitAnimation: Animation | undefined;
+  let motionPreference: MediaQueryList | undefined;
+
+  $effect(() => {
+    if (!feedback) return;
+    const timeout = setTimeout(() => (feedback = ''), failed ? 6000 : 3500);
+    return () => clearTimeout(timeout);
+  });
+
   const visible = $derived(
-    catalog.filter((icon) => `${icon.name} ${icon.tags.join(' ')}`.includes(query.toLowerCase())),
+    catalog.filter(
+      (icon) =>
+        (category === 'all' || iconCategory(icon.tags) === category) &&
+        `${icon.name} ${icon.tags.join(' ')} ${icon.description}`
+          .toLowerCase()
+          .includes(query.trim().toLowerCase()),
+    ),
   );
-  const SelectedIcon = $derived(catalog.find((icon) => icon.name === selected)!.component);
-  const pascal = (value: string) => value[0].toUpperCase() + value.slice(1);
+  const pagination = $derived(paginate(visible, currentPage));
+  $effect(() => {
+    query;
+    category;
+    currentPage = 1;
+  });
+  const entry = $derived(catalog.find((icon) => icon.name === selected) ?? catalog[0]);
+  const hasFilled = $derived(!!entry?.styles.includes('filled'));
+  const SelectedIcon = $derived(entry?.component);
+  const name = $derived(
+    selected
+      .split('-')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(''),
+  );
+  const adjustableStroke = $derived(kind === 'outline' || selected === 'folder');
+  const strokePreset = $derived(
+    Object.entries(strokeWeights).find(([, value]) => value === strokeWidth)?.[0],
+  );
+  const styleSelection = $derived(kind === 'filled' ? 'filled' : (strokePreset ?? 'custom'));
+  const styleOptions = $derived([
+    ...Object.keys(strokeWeights).map((value) => ({
+      value,
+      label: value.charAt(0).toUpperCase() + value.slice(1),
+    })),
+    ...(!strokePreset ? [{ value: 'custom', label: 'Custom' }] : []),
+    ...(hasFilled ? [{ value: 'filled', label: 'Filled' }] : []),
+  ]);
+  const strokeAttribute = $derived(
+    strokePreset
+      ? `strokeWidth="${strokePreset}"`
+      : `strokeWidth={${Number(strokeWidth.toFixed(2))}}`,
+  );
+  const snippet = $derived(
+    `<${name} size={${size}} color="${color}"${kind === 'filled' ? ' style="filled"' : ''}${adjustableStroke ? ` ${strokeAttribute}` : ''} />`,
+  );
+  const signature = $derived(`${selected}:${kind}:${size}:${color}:${strokeWidth}`);
+  $effect(() => {
+    signature;
+    operation++;
+    copying = false;
+    feedback = '';
+    failed = false;
+  });
+  $effect(() => {
+    if (!details) return;
+    let frame = 0;
+    const observer = new ResizeObserver(([entry]) => {
+      if (!entry.contentRect.height) return;
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => (previewSide = entry.contentRect.height));
+    });
+    observer.observe(details);
+    return () => {
+      observer.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  });
+
+  async function showIcon(icon: string, event?: MouseEvent) {
+    const nextIcon = catalog.find((item) => item.name === icon);
+    if (!nextIcon) return;
+    cancelExit();
+    operation++;
+    copying = false;
+    selected = icon;
+    if (kind === 'filled' && !nextIcon.styles.includes('filled')) kind = 'outline';
+    feedback = '';
+    failed = false;
+    trigger = event?.currentTarget instanceof HTMLButtonElement ? event.currentTarget : undefined;
+    animateEntrance = !!event?.detail;
+    await tick();
+    if (drawer && !drawer.open) drawer.show();
+    drawerOpen = true;
+    closeButton?.focus({ preventScroll: true });
+  }
+  function cancelExit() {
+    if (!exitAnimation) return;
+    exitAnimation.onfinish = null;
+    exitAnimation.cancel();
+    exitAnimation = undefined;
+  }
+  function finishClose() {
+    cancelExit();
+    drawer?.close();
+  }
+  function closeDrawer() {
+    if (!drawer?.open || exitAnimation) return;
+    if (!animateEntrance || motionPreference?.matches) {
+      finishClose();
+      return;
+    }
+    const pose = getComputedStyle(drawer);
+    const animation = drawer.animate(
+      [
+        { transform: pose.transform, opacity: pose.opacity },
+        { transform: 'translateY(calc(100% + 32px))', opacity: 0 },
+      ],
+      { id: 'drawer-exit', duration: 220, easing: 'cubic-bezier(0.4, 0, 1, 1)', fill: 'forwards' },
+    );
+    exitAnimation = animation;
+    animation.onfinish = () => {
+      if (exitAnimation === animation) finishClose();
+    };
+  }
+  function windowKeys(event: KeyboardEvent) {
+    if (event.defaultPrevented) return;
+    if (event.key === 'Escape' && drawer?.open) {
+      event.preventDefault();
+      closeDrawer();
+    }
+  }
+  function afterClose() {
+    cancelExit();
+    drawerOpen = false;
+    operation++;
+    copying = false;
+    feedback = '';
+    const target = trigger?.isConnected ? trigger : document.getElementById(selected);
+    if (target instanceof HTMLButtonElement) target.focus({ preventScroll: true });
+    else search?.focus({ preventScroll: true });
+  }
+  async function svgText() {
+    await tick();
+    const svg = preview?.querySelector('svg');
+    if (!svg) throw new Error('Preview unavailable');
+    return serializeIconSvg(svg, size, name);
+  }
+  async function copy(format: 'svg' | 'svelte') {
+    if (copying) return;
+    const current = ++operation;
+    copying = true;
+    failed = false;
+    feedback = '';
+    try {
+      const text = format === 'svg' ? await svgText() : snippet;
+      if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+      await navigator.clipboard.writeText(text);
+      if (operation === current)
+        feedback = format === 'svg' ? 'SVG copied.' : 'Svelte code copied.';
+    } catch {
+      if (operation === current) {
+        failed = true;
+        feedback = 'Could not copy. Allow clipboard access and try again.';
+      }
+    } finally {
+      if (operation === current) copying = false;
+    }
+  }
+  async function downloadSvg() {
+    feedback = '';
+    failed = false;
+    try {
+      const text = await svgText();
+      const url = URL.createObjectURL(new Blob([text], { type: 'image/svg+xml;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${selected}${kind === 'filled' ? '-filled' : ''}.svg`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      feedback = 'Download started.';
+    } catch {
+      failed = true;
+      feedback = 'Could not create the SVG. Please try again.';
+    }
+  }
+  onMount(() => {
+    const followTheme = () => {
+      if (!customColor)
+        color = document.documentElement.dataset.theme === 'dark' ? '#f4f4f5' : '#27272a';
+    };
+    followTheme();
+    window.addEventListener('squircle:theme-change', followTheme);
+    motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const preferenceChanged = () => {
+      if (motionPreference?.matches && exitAnimation) finishClose();
+    };
+    motionPreference.addEventListener('change', preferenceChanged);
+    try {
+      const icon = decodeURIComponent(window.location.hash.slice(1));
+      if (icon) void showIcon(icon);
+    } catch {
+      // A malformed fragment should leave the gallery usable.
+    }
+    return () => {
+      cancelExit();
+      window.removeEventListener('squircle:theme-change', followTheme);
+      motionPreference?.removeEventListener('change', preferenceChanged);
+    };
+  });
 </script>
 
 <svelte:head><title>Icons — Squircle Icons</title></svelte:head>
-<section class="page-heading">
-  <div class="eyebrow">The first collection <span class="pill">Design proposal</span></div>
-  <h1>Six familiar faces.</h1>
-  <p>
-    Explore the curves, check the details, and find a little movement. Every icon starts with an
-    original SVG.
-  </p>
-</section>
-<div class="catalog-layout">
-  <section aria-label="Icon gallery">
-    <div class="gallery-toolbar">
-      <label class="search-field"
-        ><Search size={17} /><input
-          type="search"
-          aria-label="Search icons"
-          placeholder="Search icons…"
-          bind:value={query}
-        /><kbd>6</kbd></label
-      ><span class="result-count">{visible.length} icons</span>
-    </div>
-    <div class="icon-grid">
-      {#each visible as icon}<button
-          id={icon.name}
-          class="icon-card"
-          class:selected={selected === icon.name}
-          onclick={() => (selected = icon.name)}
-          aria-pressed={selected === icon.name}
-          aria-label={'Select ' + icon.name}
-          ><div class="large-preview" style:color><icon.component size={76} {strokeWidth} /></div>
-          <div class="actual-preview" style:color>
-            <icon.component {size} {strokeWidth} /><span>{size}px</span>
-          </div>
-          <div class="card-caption">
-            <span>{icon.name}</span><span class="mono"
-              >{icon.name === 'bell' || icon.name === 'folder' ? '↝' : '↗'}</span
-            >
-          </div></button
-        >{/each}
-    </div>
-    {#if visible.length === 0}<div class="empty-state">
-        No icons match “{query}”. Try “photo”, “files”, or “gear”.
-      </div>{/if}
-    <div class="optical-row">
-      <span class="mono">OPTICAL CHECK</span>
-      <div style:color>
-        {#each [16, 20, 24, 48] as n}<div>
-            <SelectedIcon size={n} {strokeWidth} /><small>{n}px</small>
-          </div>{/each}
+<svelte:window onkeydown={windowKeys} />
+<div class="gallery-layout">
+  <div class="gallery-toolbar page-appear" aria-label="Gallery toolbar">
+    <label class="search-field"
+      ><Search size={18} /><input
+        type="search"
+        aria-label="Search icons"
+        placeholder="Search icons…"
+        bind:this={search}
+        bind:value={query}
+      /></label
+    >
+    <aside class="gallery-sidebar" aria-label="Icon controls">
+      <div class="detail-controls">
+        <label class="size-field"
+          >Size<span>{size}px</span><input
+            aria-label="Export size"
+            aria-valuetext={`${size} pixels`}
+            type="range"
+            min="16"
+            max="64"
+            step="4"
+            style:--range-progress={`${((size - 16) / 48) * 100}%`}
+            bind:value={size}
+          /></label
+        >
+        <label class="stroke-field"
+          >{kind === 'filled' && selected === 'folder' ? 'Gap' : 'Stroke'}
+          <span>{strokeWidth.toFixed(2)}</span><input
+            aria-label="Stroke width"
+            type="range"
+            min="1"
+            max="2.5"
+            step="0.05"
+            style:--range-progress={`${((strokeWidth - 1) / 1.5) * 100}%`}
+            bind:value={strokeWidth}
+            disabled={!adjustableStroke}
+          /></label
+        >
+        <Select.Root
+          type="single"
+          value={styleSelection}
+          items={styleOptions}
+          onValueChange={(preset) => {
+            if (preset === 'filled') {
+              kind = 'filled';
+              return;
+            }
+            const value = strokeWeights[preset as keyof typeof strokeWeights];
+            if (value !== undefined || preset === 'custom') {
+              kind = 'outline';
+              if (value !== undefined) strokeWidth = value;
+            }
+          }}
+        >
+          <Select.Trigger aria-label="Icon style">
+            {styleOptions.find((option) => option.value === styleSelection)?.label ?? 'Custom'}
+          </Select.Trigger>
+          <Select.Content aria-label="Icon styles">
+            {#each styleOptions as option}
+              <Select.Item value={option.value} label={option.label}>
+                <span class="style-option-preview">
+                  <Camera
+                    size={20}
+                    strokeWidth={option.value === 'filled'
+                      ? strokeWeights.regular
+                      : (strokeWeights[option.value as keyof typeof strokeWeights] ?? strokeWidth)}
+                    style={option.value === 'filled' ? 'filled' : 'outline'}
+                  />
+                  {option.label}
+                </span>
+              </Select.Item>
+            {/each}
+          </Select.Content>
+        </Select.Root>
+        <ColorPicker bind:value={color} onchange={() => (customColor = true)} />
       </div>
-      <span class="optical-note">One drawing.<br />Everyday sizes.</span>
+    </aside>
+  </div>
+  <section
+    class="icon-browser"
+    class:has-drawer={drawerOpen}
+    class:custom-color={customColor}
+    aria-label="Icon gallery"
+  >
+    <h1 class="sr-only">Icons</h1>
+    <div class="category-row page-appear" style="--appear-delay: 40ms">
+      <div
+        class="category-tabs"
+        role="tablist"
+        aria-label="Icon categories"
+        style:--category-index={categories.findIndex((item) => item.id === category)}
+      >
+        {#each categories as item, index}
+          <button
+            id={`category-${item.id}`}
+            role="tab"
+            aria-selected={category === item.id}
+            aria-controls="category-results"
+            tabindex={category === item.id ? 0 : -1}
+            onclick={() => (category = item.id)}
+            onkeydown={(event) => categoryKeys(event, index)}>{item.label}</button
+          >
+        {/each}
+      </div>
+      <span class="result-count" aria-live="polite"
+        >{visible.length} {visible.length === 1 ? 'icon' : 'icons'}</span
+      >
+    </div>
+    <div
+      class="page-appear"
+      style="--appear-delay: 80ms"
+      id="category-results"
+      role="tabpanel"
+      aria-labelledby={`category-${category}`}
+      tabindex="0"
+    >
+      <div class="icon-grid">
+        {#each pagination.items as icon}
+          <button
+            id={icon.name}
+            class="icon-button"
+            aria-label={'View ' + icon.name + ' icon'}
+            title={icon.styles.includes('filled') ? 'Filled style available' : 'Outline only'}
+            aria-haspopup="dialog"
+            aria-pressed={drawerOpen && selected === icon.name}
+            onclick={(event) => showIcon(icon.name, event)}
+          >
+            <span class="icon-glyph" aria-hidden="true">
+              <icon.component
+                {size}
+                {color}
+                {strokeWidth}
+                style={kind === 'filled' && icon.styles.includes('filled') ? 'filled' : 'outline'}
+              />
+            </span>
+            <span class="icon-name">{icon.name}</span>
+          </button>
+        {/each}
+      </div>
+      {#if pagination.pageCount > 1}<nav class="pagination" aria-label="Icon pages">
+          <button
+            disabled={pagination.page === 1}
+            onclick={() => (currentPage = pagination.page - 1)}>Previous</button
+          >
+          <span aria-live="polite">Page {pagination.page} of {pagination.pageCount}</span>
+          <button
+            disabled={pagination.page === pagination.pageCount}
+            onclick={() => (currentPage = pagination.page + 1)}>Next</button
+          >
+        </nav>{/if}
+      {#if visible.length === 0}<p class="empty-state">
+          No icons found. Try another category or search term.
+        </p>{/if}
     </div>
   </section>
-  <aside aria-label="Preview controls">
-    <div class="aside-heading">
-      <h2>Make it yours</h2>
-      <span class="mono">PREVIEW</span>
-    </div>
-    <label class="control-label" for="icon-size">Size <span>{size}px</span></label><input
-      id="icon-size"
-      type="range"
-      min="16"
-      max="48"
-      step="1"
-      bind:value={size}
-    />
-    <div class="size-presets">
-      {#each [16, 20, 24, 48] as n}<button class:active={size === n} onclick={() => (size = n)}
-          >{n}</button
-        >{/each}
-    </div>
-    <label class="control-label" for="icon-stroke">Stroke <span>{strokeWidth}</span></label><input
-      id="icon-stroke"
-      type="range"
-      min="1"
-      max="2.5"
-      step="0.25"
-      bind:value={strokeWidth}
-    /><label class="control-label" for="icon-color">Color</label>
-    <div class="color-field">
-      <input id="icon-color" type="color" bind:value={color} /><span class="mono">{color}</span>
-    </div>
-    <div class="aside-divider"></div>
-    <h3>Use {selected}</h3>
-    <pre><code
-        >{`import ${pascal(selected)} from\n'@squircle-icons/svelte/${selected}';\n\n<${pascal(selected)}\n  size={${size}}\n  color="${color}"\n  strokeWidth={${strokeWidth}}\n/>`}</code
-      ></pre>
-    <p class="aside-note">
-      Decorative by default. Add a <code>label</code> when the icon carries meaning.
-    </p>
-    <a class="text-link" href="/docs#accessibility">Accessibility guide ↗</a>
-  </aside>
 </div>
-<section id="motion" class="motion-section">
-  <div class="section-head">
-    <div>
-      <div class="eyebrow">Motion studies</div>
-      <h2>Small moves. Clear states.</h2>
-      <p>Nothing plays on mount. Nothing loops by default.</p>
-    </div>
-    <span class="pill">2 animated icons</span>
-  </div>
-  <div class="motion-toolbar">
-    <label><input type="checkbox" bind:checked={hover} /> Enable hover previews</label><label
-      ><input
-        type="checkbox"
-        checked={reducedMotion === 'always'}
-        onchange={(event) => (reducedMotion = event.currentTarget.checked ? 'always' : 'system')}
-      /> Always reduce motion</label
-    ><span>System preferences are always respected.</span>
-  </div>
-  <div class="motion-grid">
-    <article class="motion-demo folder-demo">
-      <div class="motion-stage" style:color>
-        <Folder bind:this={folder} size={92} {strokeWidth} {open} {hover} {reducedMotion} />
-      </div>
-      <div class="motion-info">
-        <div>
-          <h3>folder <span class="pill">State</span></h3>
-          <p>A controlled opening. A settled ending.</p>
-        </div>
-        <div class="demo-buttons">
-          <button class="button" onclick={() => (open = !open)} aria-pressed={open}
-            >{open ? 'Close folder' : 'Open folder'}</button
-          ><button class="button subtle" onclick={() => folder?.reset()}>Reset folder</button>
-        </div>
-      </div>
-      <code>&lt;Folder open=&#123;{String(open)}&#125; /&gt;</code>
-    </article>
-    <article class="motion-demo bell-demo">
-      <div class="motion-stage" style:color>
-        <Bell bind:this={bell} size={92} {strokeWidth} {hover} {reducedMotion} />
-      </div>
-      <div class="motion-info">
-        <div>
-          <h3>bell <span class="pill">One shot</span></h3>
-          <p>A brief ring, then back to rest.</p>
-        </div>
-        <div class="demo-buttons">
-          <button class="button" onclick={() => bell?.play()}>Ring bell</button><button
-            class="button subtle"
-            onclick={() => bell?.reset()}>Reset bell</button
+
+<div class="drawer-position">
+  <dialog
+    bind:this={drawer}
+    class="icon-drawer"
+    class:animated={animateEntrance}
+    aria-labelledby="icon-drawer-title"
+    onclose={afterClose}
+  >
+    {#if entry && SelectedIcon}
+      <div class="drawer-inner">
+        <div class="drawer-heading">
+          <div>
+            <span class="drawer-kicker">SQUIRCLE ICONS</span>
+            <h2 id="icon-drawer-title">{name}</h2>
+          </div>
+          <button
+            bind:this={closeButton}
+            class="close-button"
+            onclick={closeDrawer}
+            aria-label="Close icon details"
+            title="Close"><X size={18} /></button
           >
         </div>
+        <div class="drawer-content" style:--preview-side={`${previewSide}px`}>
+          <div class="drawer-preview" bind:this={preview} data-testid="drawer-preview">
+            <SelectedIcon size={72} {color} {strokeWidth} style={kind} />
+          </div>
+          <div class="drawer-details" bind:this={details}>
+            <span class="code-language">Svelte</span>
+            <div class="code-panel" id="icon-code-panel" role="region" aria-label="Svelte code">
+              <pre class="usage-code"><code>{snippet}</code></pre>
+              <button
+                class="code-copy"
+                aria-label="Copy Svelte code"
+                title="Copy code"
+                onclick={() => copy('svelte')}
+                disabled={copying}
+              >
+                <Copy size={18} />
+              </button>
+            </div>
+            <div class="drawer-actions">
+              <button class="action primary" onclick={downloadSvg}
+                ><Download size={16} />Download SVG</button
+              >
+              <button class="action" onclick={() => copy('svg')} disabled={copying}
+                ><Copy size={16} />Copy SVG</button
+              >
+            </div>
+          </div>
+        </div>
       </div>
-      <code>bell.play();</code>
-    </article>
-  </div>
-  <p class="motion-footnote">
-    Hover is a visual preview. App actions belong on accessible buttons. <a href="/docs#motion"
-      >Read the motion contract ↗</a
+    {/if}
+  </dialog>
+</div>
+
+<div
+  class="notification-toast"
+  class:visible={!!feedback}
+  class:error={failed}
+  role="status"
+  aria-live="polite"
+  aria-atomic="true"
+  aria-hidden={!feedback}
+>
+  {#if feedback}
+    {#if failed}<X size={20} />{:else}<Check size={20} />{/if}
+    <span>{feedback}</span>
+    <button aria-label="Dismiss notification" onclick={() => (feedback = '')}
+      ><X size={16} /></button
     >
-  </p>
-</section>
+  {/if}
+</div>
 
 <style>
-  .catalog-layout {
-    display: grid;
-    grid-template-columns: 1fr 254px;
-    gap: 34px;
+  .gallery-layout {
+    display: block;
+    padding: 36px 0 64px;
+    min-height: calc(100dvh - 84px);
+    font-size: 14px;
+  }
+  .pagination {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 24px;
+  }
+  .pagination button {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    padding: 6px 12px;
+  }
+  .pagination button:disabled {
+    opacity: 0.4;
+  }
+  .icon-browser {
+    min-width: 0;
+  }
+  .icon-browser.has-drawer {
+    padding-bottom: 380px;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
   .gallery-toolbar {
+    position: sticky;
+    top: calc(var(--site-header-height, 92px) + 12px);
+    z-index: 25;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 20px;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    box-shadow: 0 4px 20px #00000008;
+  }
+  .category-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .category-tabs {
+    position: relative;
+    isolation: isolate;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--surface-subtle) 75%, var(--border));
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    min-width: 0;
+  }
+  .category-tabs::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 4px auto 4px 4px;
+    width: calc((100% - 8px) / 5);
+    border-radius: 999px;
+    background: var(--selection-bg);
+    transform: translateX(calc(var(--category-index, 0) * 100%));
+    transition: transform 220ms var(--ease-out);
+  }
+  .category-tabs button {
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    padding: 6px 18px;
+    font-size: 14px;
+    transition: color 160ms ease;
+  }
+  .category-tabs button:hover {
+    color: var(--text);
+  }
+  .category-tabs button[aria-selected='true'] {
+    color: var(--selection-fg);
   }
   .search-field {
     display: flex;
     align-items: center;
-    gap: 12px;
-    background: #fff;
-    border: 1px solid #e4e4e7;
-    border-radius: 10px;
-    padding: 10px 13px;
+    gap: 10px;
     flex: 1;
-    color: #a1a1aa;
+    min-width: 180px;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius-card) - 12px);
+    background: var(--surface);
+    padding: 10px 16px;
+    color: var(--faint);
+  }
+  .search-field:focus-within {
+    border-color: var(--color-amber-500);
+    outline: 2px solid color-mix(in srgb, var(--color-amber-500) 18%, transparent);
   }
   .search-field input {
     border: 0;
     background: none;
     outline: 0 !important;
     width: 100%;
-    font-size: 13px;
-    color: #27272a;
-  }
-  .search-field kbd {
-    font-size: 10px;
-    border: 1px solid #e4e4e7;
-    border-radius: 4px;
-    padding: 0 5px;
-    color: #a1a1aa;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--text);
   }
   .result-count {
-    font-size: 11px;
-    color: #a1a1aa;
+    color: var(--muted);
+    white-space: nowrap;
+    text-align: right;
   }
   .icon-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 14px;
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 12px;
   }
-  .icon-card {
+  .icon-button {
     position: relative;
-    border: 1px solid #e4e4e7;
-    border-radius: 15px;
-    background: #ffffff;
-    padding: 18px;
-    min-height: 227px;
-    text-align: left;
-    transition: background 0.15s;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    justify-items: center;
+    gap: 12px;
+    aspect-ratio: 1;
+    min-width: 0;
+    padding: 12px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card-small);
+    background: var(--surface);
+    color: var(--text);
   }
-  .icon-card:hover {
-    background: #fafafa;
+  .icon-button:hover {
+    background: var(--surface-subtle);
+    border-color: var(--border-strong);
+    color: var(--text);
   }
-  .icon-card.selected {
-    border-color: #6366f1;
-    background: #eef2ff;
-    box-shadow: 0 0 0 1px #6366f120;
+  .icon-button[aria-pressed='true'] {
+    background: var(--surface-subtle);
+    border-color: var(--selection-bg);
   }
-  .large-preview {
-    height: 114px;
+  .icon-glyph {
     display: grid;
     place-items: center;
+    align-self: stretch;
+    min-height: 0;
   }
-  .actual-preview {
-    height: 47px;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    justify-content: center;
+  .icon-button .icon-name {
+    white-space: nowrap;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-align: center;
   }
-  .actual-preview span {
-    font: 9px monospace;
-    color: #a1a1aa;
-  }
-  .card-caption {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 12px;
-    font: 11px monospace;
-    color: #71717a;
-  }
-  .card-caption > span:last-child {
-    color: #818cf8;
-  }
-  .optical-row {
-    border: 1px solid #e4e4e7;
-    border-radius: 12px;
-    margin-top: 18px;
-    display: flex;
-    align-items: center;
-    padding: 18px 20px;
-    gap: 24px;
-    min-height: 113px;
-  }
-  .optical-row > span:first-child {
-    font-size: 9px;
-    letter-spacing: 0.1em;
-    color: #a1a1aa;
-  }
-  .optical-row > div {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-around;
-    gap: 22px;
-    flex: 1;
-  }
-  .optical-row > div > div {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    gap: 8px;
-  }
-  .optical-row small {
-    font: 9px monospace;
-    color: #a1a1aa;
-  }
-  .optical-note {
-    font-size: 10px;
-    color: #a1a1aa;
+  .icon-button:hover .icon-name,
+  .icon-button[aria-pressed='true'] .icon-name {
+    color: var(--text);
   }
   .empty-state {
-    border: 1px dashed #c7d2fe;
-    padding: 70px 20px;
+    margin: 72px 0;
     text-align: center;
-    border-radius: 12px;
-    color: #71717a;
+    color: var(--muted);
   }
-  aside {
-    background: #fafafa;
-    border: 1px solid #e4e4e7;
-    border-radius: 15px;
-    padding: 23px;
-    align-self: start;
+  .gallery-sidebar {
+    flex: 0 0 auto;
+    min-width: 0;
   }
-  .aside-heading {
-    display: flex;
+  .detail-controls {
+    display: grid;
+    grid-template-columns: 180px 180px 128px 144px;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
-    margin-bottom: 28px;
+    gap: 16px;
+    font-size: 14px;
   }
-  .aside-heading h2 {
-    font-size: 16px;
-    margin: 0;
-  }
-  .aside-heading > span {
-    font-size: 8px;
-    letter-spacing: 0.1em;
-    color: #a1a1aa;
-  }
-  .control-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    margin-top: 24px;
-    margin-bottom: 9px;
-    color: #52525b;
-  }
-  .control-label span {
-    font: 10px monospace;
-    color: #71717a;
-  }
-  input[type='range'] {
-    width: 100%;
-    accent-color: #6366f1;
-    height: 3px;
-    display: block;
-    margin: 16px 0;
-  }
-  .size-presets {
-    display: flex;
-    gap: 7px;
-    margin-top: 17px;
-  }
-  .size-presets button {
-    border: 1px solid #e4e4e7;
-    background: transparent;
-    border-radius: 6px;
-    font: 10px monospace;
-    padding: 4px 11px;
-    color: #71717a;
-    flex: 1;
-  }
-  .size-presets button.active {
-    background: #e0e7ff;
-    border-color: #a5b4fc;
-    color: #4f46e5;
-  }
-  .color-field {
-    display: flex;
+  .style-option-preview {
+    display: inline-flex;
+    align-items: center;
     gap: 10px;
-    align-items: center;
-    border: 1px solid #e4e4e7;
-    background: #ffffff;
-    padding: 7px 9px;
-    border-radius: 7px;
   }
-  .color-field input {
-    border: 0;
-    background: none;
+  .size-field,
+  .stroke-field {
+    display: grid;
+    grid-template-columns: auto minmax(48px, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+    color: var(--muted);
+  }
+  .size-field span,
+  .stroke-field span {
+    grid-column: 3;
+    grid-row: 1;
+    color: var(--text);
+  }
+  .size-field input,
+  .stroke-field input {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 18px;
+    margin: 0;
     padding: 0;
-    width: 22px;
-    height: 23px;
+    border: 0;
+    border-radius: 999px;
+    background: linear-gradient(
+        to right,
+        var(--color-amber-500) 0%,
+        var(--color-amber-500) var(--range-progress),
+        var(--border-strong) var(--range-progress),
+        var(--border-strong) 100%
+      )
+      center / 100% 4px no-repeat;
     cursor: pointer;
   }
-  .color-field span {
-    font-size: 10px;
-    color: #52525b;
+  .size-field input::-webkit-slider-runnable-track,
+  .stroke-field input::-webkit-slider-runnable-track {
+    height: 4px;
+    background: transparent;
+    border: 0;
   }
-  .aside-divider {
-    height: 1px;
-    background: #e4e4e7;
-    margin: 25px 0;
+  .size-field input::-webkit-slider-thumb,
+  .stroke-field input::-webkit-slider-thumb {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 12px;
+    height: 12px;
+    margin-top: -4px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-amber-500);
+    box-shadow: none;
   }
-  aside h3 {
-    font-size: 12px;
-    margin-bottom: 13px;
+  .size-field input::-moz-range-track,
+  .stroke-field input::-moz-range-track {
+    height: 4px;
+    border: 0;
+    background: transparent;
   }
-  aside pre {
-    background: #f4f4f5;
-    border-color: #e4e4e7;
-    font-size: 9px;
-    padding: 12px;
-    line-height: 1.85;
-    border-radius: 8px;
+  .size-field input::-moz-range-progress,
+  .stroke-field input::-moz-range-progress {
+    height: 4px;
+    background: transparent;
   }
-  .aside-note {
-    font-size: 10px;
-    color: #71717a;
-    line-height: 1.8;
+  .size-field input::-moz-range-thumb,
+  .stroke-field input::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--color-amber-500);
+    box-shadow: none;
   }
-  aside .text-link {
-    font-size: 10px;
+  .stroke-field input:disabled {
+    opacity: 0.3;
+    cursor: default;
   }
-  .motion-section {
-    margin-top: 62px;
-    scroll-margin-top: 30px;
-  }
-  .motion-toolbar {
-    border: 1px solid #e4e4e7;
-    border-radius: 10px;
-    padding: 13px 17px;
-    display: flex;
-    align-items: center;
-    gap: 25px;
-    margin-bottom: 20px;
-    font-size: 11px;
-    color: #52525b;
-  }
-  .motion-toolbar label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .motion-toolbar input {
-    accent-color: #6366f1;
-  }
-  .motion-toolbar > span {
-    margin-left: auto;
-    font-size: 10px;
-    color: #a1a1aa;
-  }
-  .motion-grid {
+  .drawer-position {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    width: min(1184px, calc(100% - 96px));
+    pointer-events: none;
+    z-index: 30;
+  }
+  .icon-drawer {
+    position: static;
+    margin: 0;
+    width: 100%;
+    max-width: none;
+    max-height: min(70dvh, 520px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card-large);
+    padding: 24px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    pointer-events: auto;
+    box-shadow:
+      0 8px 40px #18181b12,
+      0 2px 8px #18181b06;
+  }
+  .icon-drawer.animated[open] {
+    animation: drawer-enter 320ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .drawer-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: 20px;
+    margin-bottom: 20px;
   }
-  .motion-demo {
-    border: 1px solid #e0e7ff;
-    border-radius: 16px;
-    padding: 26px;
-    background: #fafafa;
+  .drawer-kicker {
+    font-size: 14px;
+    color: var(--muted);
   }
-  .bell-demo {
-    background: #eef2ff;
-    border-color: #e0e7ff;
+  .drawer-heading h2 {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+    margin: 4px 0 0;
+    letter-spacing: 0;
   }
-  .motion-stage {
-    height: 170px;
+  .close-button {
     display: grid;
     place-items: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+    border-radius: 7px;
+    background: var(--surface);
+    color: var(--muted);
+    padding: 0;
+    font-size: 14px;
   }
-  .motion-info {
+  .close-button:hover {
+    color: var(--text);
+    background: var(--surface-subtle);
+  }
+  .drawer-content {
+    display: grid;
+    grid-template-columns: var(--preview-side) minmax(0, 1fr);
+    gap: 24px;
+  }
+  .drawer-preview {
+    display: grid;
+    place-items: center;
+    align-self: start;
+    width: var(--preview-side);
+    aspect-ratio: 1;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card-small);
+    background-color: var(--surface);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 14px 14px;
+  }
+  .drawer-preview :global(svg) {
+    width: 70%;
+    height: 70%;
+  }
+  .drawer-details {
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 12px;
   }
-  .motion-info h3 {
-    font: 13px monospace;
-    margin: 0 0 7px;
+  .code-language {
+    align-self: flex-start;
+    padding: 5px 16px;
+    border-radius: 999px;
+    background: var(--selection-bg);
+    color: var(--selection-fg);
+    font-size: 14px;
+  }
+  .code-panel {
     display: flex;
-    gap: 10px;
-    align-items: center;
+    align-items: flex-start;
+    position: relative;
+    min-width: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card-small);
+    background: var(--surface-subtle);
+    overflow: hidden;
   }
-  .motion-info p {
-    font-size: 11px;
-    color: #71717a;
-    margin: 0;
+  .code-copy {
+    flex-shrink: 0;
+    margin: 12px 12px 12px 0;
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
   }
-  .demo-buttons {
+  .code-copy:hover {
+    border-color: var(--border-strong);
+  }
+  .code-copy:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+  .drawer-actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
+    margin: auto 0 0;
   }
-  .demo-buttons .button {
-    font-size: 11px;
-    padding: 8px 13px;
-    background: #ffffff55;
+  .action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-control);
+    padding: 8px 12px;
+    background: var(--surface);
+    color: var(--text-secondary);
+    font-size: 14px;
+    transition:
+      background-color 150ms ease,
+      border-color 150ms ease;
   }
-  .demo-buttons .subtle {
-    border-color: transparent;
+  .action.primary {
+    background: var(--color-amber-500);
+    color: var(--accent-foreground);
+    border-color: var(--color-amber-500);
+  }
+  .action:hover {
+    border-color: var(--color-amber-500);
+  }
+  @media (hover: hover) {
+    .action.primary:enabled:hover {
+      background: color-mix(in oklab, var(--color-amber-500) 88%, black);
+      border-color: color-mix(in oklab, var(--color-amber-500) 88%, black);
+    }
+  }
+  .action:disabled {
+    opacity: 0.5;
+    cursor: wait;
+  }
+  .usage-code {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: auto;
+    padding: 16px;
+    border: 0;
+    border-radius: 0;
     background: transparent;
-    color: #71717a;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
   }
-  .motion-demo > code {
-    display: block;
-    border-top: 1px solid #e0e7ff;
-    margin-top: 20px;
-    padding-top: 15px;
-    font-size: 10px;
-    color: #6366f1;
+  .usage-code code {
+    font-size: 14px;
   }
-  .bell-demo > code {
-    border-color: #c7d2fe;
-    color: #6366f1;
+  .notification-toast {
+    position: fixed;
+    z-index: 100;
+    right: 24px;
+    bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: min(440px, calc(100vw - 48px));
+    padding: 14px 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-card-small);
+    background: var(--surface);
+    box-shadow: 0 8px 32px #0002;
+    color: var(--text);
+    font-size: 14px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease,
+      visibility 0s linear 220ms;
   }
-  .motion-footnote {
-    font-size: 11px;
-    color: #71717a;
-    margin-top: 19px;
+  .notification-toast.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    transition-delay: 0s;
   }
-  .motion-footnote a {
-    text-decoration: underline;
-    text-underline-offset: 4px;
+  .notification-toast.error {
+    border-color: var(--accent-text);
   }
-  @media (max-width: 1000px) {
-    .catalog-layout {
-      grid-template-columns: 1fr 220px;
-      gap: 20px;
+  .notification-toast button {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+  }
+  .notification-toast button:hover {
+    background: var(--surface-subtle);
+    color: var(--text);
+  }
+  @keyframes drawer-enter {
+    from {
+      transform: translateY(calc(100% + 32px));
+      opacity: 0;
     }
-    .icon-grid {
-      grid-template-columns: repeat(2, 1fr);
+    to {
+      transform: translateY(0);
+      opacity: 1;
     }
-    .optical-note {
-      display: none;
-    }
-    .motion-toolbar {
+  }
+  @media (max-width: 1100px) {
+    .gallery-toolbar {
       flex-wrap: wrap;
-      gap: 10px 22px;
     }
-    .motion-toolbar > span {
-      margin-left: 0;
-      width: 100%;
+    .gallery-toolbar .search-field {
+      flex-basis: 100%;
+      max-width: none;
+    }
+    .gallery-sidebar {
+      flex: 1;
+    }
+    .detail-controls {
+      grid-template-columns: minmax(180px, 1fr) minmax(180px, 1fr) 128px 144px;
     }
   }
-  @media (max-width: 640px) {
-    .catalog-layout {
-      display: flex;
-      flex-direction: column;
+  @media (max-width: 1100px) {
+    .drawer-content {
+      grid-template-columns: 1fr;
     }
-    aside {
-      width: 100%;
-      display: block;
+    .drawer-preview {
+      width: min(var(--preview-side), 100%);
+    }
+  }
+  @media (max-width: 760px) {
+    .gallery-layout {
+      padding-top: 24px;
+    }
+    .drawer-position {
+      width: calc(100% - 44px);
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .drawer-content {
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+    .drawer-preview {
+      width: min(var(--preview-side), 100%);
+    }
+    .icon-drawer {
+      padding: 20px;
+    }
+    .gallery-toolbar {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .search-field {
+      flex-basis: 100%;
+    }
+  }
+  @media (max-width: 620px) {
+    .category-row {
+      flex-wrap: wrap;
+    }
+    .category-tabs button {
+      padding-inline: 8px;
+    }
+    .detail-controls {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
     }
     .icon-grid {
       gap: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
     }
-    .icon-card {
-      padding: 14px;
-      min-height: 215px;
+    .drawer-position {
+      display: block;
+      width: calc(100% - 40px);
+      bottom: 20px;
     }
-    .optical-row {
-      gap: 15px;
-      padding: 16px 12px;
+    .icon-drawer {
+      max-height: 72dvh;
     }
-    .optical-row > span:first-child {
-      font-size: 8px;
-      width: 45px;
-    }
-    .optical-row > div {
-      gap: 12px;
-    }
-    .motion-grid {
-      grid-template-columns: 1fr;
-    }
-    .motion-section .section-head {
-      flex-direction: column;
-      gap: 14px;
+    .usage-code {
+      max-height: 160px;
+      overflow: auto;
     }
   }
-
-  .catalog-layout {
-    gap: 29px;
-  }
-  .gallery-toolbar {
-    margin-bottom: 20px;
-  }
-  .search-field {
-    border-color: #e8e8ef;
-    box-shadow: 0 2px 5px #18181b02;
-    border-radius: 12px;
-    padding: 12px 15px;
-    background: #fff;
-  }
-  .search-field input {
-    font-size: 12px;
-  }
-  .search-field kbd {
-    border-color: #eeeef4;
-    background: #fafafa;
-  }
-  .result-count {
-    font-size: 10px;
-    color: #a5a5b2;
-  }
-  .icon-grid {
-    gap: 15px;
-  }
-  .icon-card {
-    border-color: #e8e8ef;
-    border-radius: 20px;
-    padding: 20px;
-    background: linear-gradient(#fff, #fefeff);
-    box-shadow: 0 2px 5px #18181b02;
-    transition:
-      transform 0.2s,
-      box-shadow 0.2s,
-      border-color 0.2s;
-  }
-  .icon-card:hover {
-    background: #fdfdff;
-    transform: translateY(-2px);
-    border-color: #c7d2fe;
-    box-shadow: 0 10px 28px #4f46e50a;
-  }
-  .icon-card.selected {
-    background: radial-gradient(ellipse at 50% 0%, #f0f1ff, #fcfcff);
-    border-color: #b4b7fb;
-    box-shadow:
-      inset 0 1px #fff,
-      0 3px 10px #4f46e506;
-  }
-  .card-caption {
-    font-size: 10px;
-    color: #9696a5;
-  }
-  .card-caption > span:last-child {
-    color: #b8b8d0;
-  }
-  .actual-preview span {
-    font-size: 8px;
-    color: #b2b2c0;
-  }
-  .optical-row {
-    border-color: #e8e8ef;
-    border-radius: 15px;
-    padding: 21px;
-    background: #fdfdfe;
-    box-shadow: 0 2px 5px #18181b02;
-  }
-  .optical-row > span:first-child {
-    font-size: 8px;
-    color: #aaaab9;
-  }
-  .optical-row small {
-    font-size: 8px;
-    color: #aaaab9;
-  }
-  .optical-note {
-    font-size: 9px;
-    color: #aaaab9;
-  }
-  aside {
-    position: sticky;
-    top: 108px;
-    background: linear-gradient(#fefeff, #fafafd);
-    border-color: #e8e8f0;
-    border-radius: 20px;
-    padding: 23px;
-    box-shadow: 0 4px 20px #312e8104;
-  }
-  .aside-heading h2 {
-    font-size: 17px;
-    font-weight: 500;
-  }
-  .aside-heading > span {
-    font-size: 7px;
-    color: #b3b3c1;
-  }
-  .control-label {
-    font-size: 10px;
-    color: #7c7c8e;
-  }
-  .control-label span {
-    font-size: 9px;
-    color: #a1a1b3;
-  }
-  .color-field {
-    border-color: #e7e7ef;
-    border-radius: 8px;
-    background: #fff;
-  }
-  .color-field span {
-    font-size: 9px;
-    color: #868698;
-  }
-  .size-presets button {
-    border-radius: 6px;
-    border-color: #e8e8ef;
-    color: #a1a1b0;
-    font-size: 9px;
-    background: #fff;
-  }
-  .size-presets button.active {
-    background: #f0f0ff;
-    border-color: #c7d2fe;
-    color: #6366f1;
-  }
-  .aside-divider {
-    background: #eaeaf1;
-  }
-  aside pre {
-    background: #f4f4f9;
-    border-color: #e9e9f1;
-    border-radius: 10px;
-    font-size: 8px;
-    padding: 15px;
-  }
-  aside .text-link {
-    font-size: 9px;
-  }
-  .aside-note {
-    font-size: 9px;
-    color: #a0a0b0;
-  }
-  .motion-section {
-    margin-top: 76px;
-  }
-  .motion-section h2 {
-    font-size: 32px;
-  }
-  .motion-section .section-head p {
-    font-size: 13px;
-    color: #92929f;
-  }
-  .motion-toolbar {
-    border-color: #e8e8ef;
-    border-radius: 12px;
-    background: #fcfcfe;
-    font-size: 10px;
-    padding: 14px 17px;
-    color: #8b8b9b;
-    box-shadow: 0 2px 5px #18181b02;
-  }
-  .motion-toolbar > span {
-    font-size: 9px;
-    color: #ababbb;
-  }
-  .motion-demo {
-    border-color: #e6e7f3;
-    border-radius: 22px;
-    background: radial-gradient(ellipse at 50% 0%, #f3f3ff80, transparent 70%), #fdfdff;
-    padding: 28px;
-    box-shadow: 0 3px 12px #312e8103;
-  }
-  .bell-demo {
-    background: radial-gradient(ellipse at 50% 0%, #eceeff, transparent 70%), #fdfdff;
-  }
-  .motion-stage {
-    height: 183px;
-  }
-  .motion-info h3 {
-    font-size: 12px;
-    font-weight: 400;
-  }
-  .motion-info p {
-    font-size: 11px;
-    color: #a1a1b0;
-  }
-  .demo-buttons .button {
-    font-size: 10px;
-    padding: 8px 15px;
-    background: #fff;
-    border-color: #e6e6f0;
-    box-shadow: 0 2px 4px #18181b02;
-    min-height: 33px;
-  }
-  .demo-buttons .subtle {
-    box-shadow: none;
-    border-color: transparent;
-    background: transparent;
-    color: #a1a1b1;
-  }
-  .motion-demo > code {
-    border-color: #e9e9f5;
-    color: #9b9bc0;
-    font-size: 9px;
-  }
-  .motion-footnote {
-    font-size: 10px;
-    color: #a1a1b1;
-  }
-  @media (max-width: 1000px) {
-    .catalog-layout {
-      gap: 20px;
+  @media (prefers-reduced-motion: reduce) {
+    .notification-toast {
+      transform: none;
+      transition: none;
     }
-    aside {
-      padding: 20px;
+    .category-tabs button,
+    .category-tabs::before,
+    .action {
+      transition: none;
     }
-    .icon-card {
-      padding: 17px;
-    }
-  }
-  @media (max-width: 640px) {
-    aside {
-      position: static;
-      padding: 23px;
-    }
-    .icon-grid {
-      gap: 11px;
-    }
-    .icon-card {
-      padding: 14px;
-      border-radius: 17px;
-    }
-    .motion-section {
-      margin-top: 52px;
-    }
-    .motion-section h2 {
-      font-size: 27px;
-    }
-    .motion-demo {
-      border-radius: 19px;
-      padding: 24px;
+    .icon-drawer.animated[open] {
+      animation: none;
     }
   }
 </style>

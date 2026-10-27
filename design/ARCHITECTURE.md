@@ -1,11 +1,13 @@
 # Split repository architecture
 
-- **core** owns original SVGs, metadata, named-part motion recipes, validation, and framework-independent controller/types.
-- **svelte** consumes a pinned core artifact, generates native Svelte components and internal core copies, packages exports/declarations, and validates isolated consumers, bundles, SSR/hydration, and lifecycle behavior.
-- **homepage** consumes a pinned packed Svelte artifact, generates browsing metadata from its catalog export, and implements the SvelteKit website. It never copies icon implementation source.
+- **core** owns original SVGs, metadata, validation, and framework-independent types.
+- **svelte** consumes a pinned core artifact, generates native Svelte components, packages exports/declarations, and validates isolated consumers, bundles, SSR/hydration, and style selection.
+- **homepage** consumes an exactly pinned published Svelte npm package, generates browsing metadata from its catalog export, and implements the SvelteKit website. It never copies icon implementation source.
 
-Alpha dependencies are checked-in build artifacts, with source commit and SHA-256 recorded in `dependency-lock.json`. They are refreshed only by explicit sync commands against committed clean source checkouts. Each CI build therefore works from one repository without cross-repository credentials or a published npm dependency. The trade-off is that source updates require a reviewed sync commit in each downstream repository.
+The homepage installs the exact npm release `0.1.0-alpha.3`. Its lockfile records npm integrity; `dependency-lock.json` also records the verified source tag, registry tarball, SHA-512 and SHA-256, with a retained copy of the released artifact and catalog snapshot. Dependency validation checks the installed version, manifest pin, artifact integrity and catalog. The source-sync command remains available for explicitly requested unreleased development builds and records a local file dependency instead. Core-to-adapter development dependencies still use checked-in build artifacts.
 
-Core catalog/source exports are internal build contracts. The final public package names remain undecided. Original artwork and code use the MIT license. Later frameworks can consume the same core artifact; no other adapter is implemented yet.
+Core catalog/source exports are internal build contracts. The Svelte package uses the public name `@squircle-icons/svelte`. Original artwork and code use the MIT license. Later frameworks can consume the same core artifact; no other adapter is implemented yet.
 
-Generated files are deterministic and checked against their generator. The Svelte adapter owns lifecycle and preference listeners; core owns motion styles after mount. Static imports remain isolated from animation runtime. The first six icons use no DOM IDs and motion is explicit, finite, and reduced-motion aware.
+Generated files are deterministic and checked against their generator. Components are static, accept presentation/accessibility props, and select separately authored Outline/Filled drawings through `style`. Direct imports remain isolated from other icons. The library uses no DOM IDs or animation runtime.
+
+The public website has no development review package or review routes. A separate private local application owns icon/morph inspection. Its source, build, dependencies and tests are independent of this website.

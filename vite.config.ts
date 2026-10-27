@@ -3,5 +3,6 @@ import adapter from '@sveltejs/adapter-static';
 import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import { defineConfig } from 'vite';
 export default defineConfig({
+  ssr: { noExternal: ['bits-ui'] },
   plugins: [sveltekit({ adapter: adapter(), preprocess: vitePreprocess() })],
 });

@@ -2,11 +2,11 @@
 
 **Alpha stage · Open source · MIT license**
 
-The SvelteKit website for Squircle Icons: a white/black/indigo landing page, icon gallery, and documentation. It consumes the real packed [Svelte adapter](https://github.com/squircle-icons/svelte); artwork and recipes live in [core](https://github.com/squircle-icons/core).
+The SvelteKit website for Squircle Icons: a white/black/Amber 500 landing page, icon gallery, and documentation. It consumes the published [Svelte adapter](https://github.com/squircle-icons/svelte); artwork lives in [core](https://github.com/squircle-icons/core).
 
 ![Landing preview](design/previews/landing-hero.png)
 
-The first public package is `@squircle-icons/svelte@0.1.0-alpha.0`, available through the `alpha` tag. Consumers use `npm install @squircle-icons/svelte@alpha`; this website continues to pin the reviewed tarball for reproducible local/CI builds.
+This website installs `@squircle-icons/svelte@0.1.0-alpha.3` directly from npm with an exact version and lockfile integrity. Consumers can use `npm install @squircle-icons/svelte@0.1.0-alpha.3`. A checksum-verified copy of the published tarball and its source tag are recorded in `vendor/` and `dependency-lock.json` for provenance. The released catalog includes all 20 approved icons in both Outline and Filled styles.
 
 ## Develop
 
@@ -17,7 +17,7 @@ pnpm install --frozen-lockfile
 pnpm dev
 ```
 
-Routes: `/` landing and interactive playground, `/icons` gallery and motion studies, `/docs` installation/API/accessibility guide, and `/lab` the icon review workbench. The generated catalog is derived from the installed package metadata, while components are imported through the package's actual exports. There is no duplicate icon implementation in this repository.
+Routes: `/` landing and animated icon grid, `/icons` static icon gallery, `/docs` installation/API/accessibility guide. The generated catalog is derived from the installed package metadata, while components are imported through the package's actual exports. There is no duplicate icon implementation in this repository.
 
 ## Verify
 
@@ -27,22 +27,20 @@ pnpm verify
 pnpm preview
 ```
 
-Checks cover the pinned dependency's commit/hash, catalog generation, Svelte/TypeScript diagnostics, production prerender, navigation, controls, playground/motion interactions, and 390/700-pixel layouts across Chromium, Firefox, and WebKit. Adapter-specific SSR/motion/bundle/tarball checks live in the Svelte repository; source/model tests live in core.
+Checks include synthetic catalog/pagination boundaries, deliberate sync-failure rollback, the pinned dependency's commit/hash, catalog generation, Svelte/TypeScript diagnostics, production prerender, navigation, controls, style and preview controls, and 390/700-pixel layouts across Chromium, Firefox, and WebKit. Adapter-specific SSR/bundle/tarball checks live in the Svelte repository; source/model tests live in core.
 
 ## Update the package
+
+For a published release, install the exact npm version, refresh the recorded registry artifact/integrity and catalog snapshot, run `pnpm generate`, and verify the site. Keep the manifest, lockfile, provenance and generated catalogs together.
+
+For an unreleased development build, the existing source-sync workflow remains available:
 
 ```sh
 pnpm sync:svelte ../svelte
 ```
 
-The committed, clean Svelte checkout is checked and built, then packed into `vendor/`. The command records its commit and SHA-256, refreshes the package/lockfile, and regenerates catalog imports. Commit the artifact, provenance, generated catalog, and lockfile together. CI only needs this repository and the public development dependencies; it does not need cross-repository tokens.
+The committed, clean Svelte checkout is checked and built, then packed into `vendor/`. The command records its commit and SHA-256 in a content-addressed artifact, refreshes the package/lockfile, and regenerates catalog imports. It rejects source changes during verification or packing. If installation, generation or provenance validation fails, it restores the previous files and dependency; if recovery also fails, it preserves a backup and reports its path. Commit the artifact, provenance, generated catalog, and lockfile together. CI only needs this repository and the public development dependencies; it does not need cross-repository tokens.
 
-The included tarball is a reviewed alpha artifact, not an npm release. Original artwork and code are licensed under [MIT](LICENSE); third-party assets retain their own licenses. No website deployment is performed by CI. See [migration provenance](MIGRATION.md), [design notes](design/DESIGN.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
+The active provenance tarball is the exact published alpha.3 npm artifact. Source-sync development artifacts are separate from npm releases. Original artwork and code are licensed under [MIT](LICENSE); third-party assets retain their own licenses. No website deployment is performed by CI. See [migration provenance](MIGRATION.md), [design notes](design/DESIGN.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
-## Icon lab
-
-Open the desktop-only `/lab` workspace for static review. All six icons have Outline variants; five also have Filled. Folder, Camera, Heart and Settings (both styles) and Search (Outline only) are owner-approved. Bell is also approved after its solid Filled clapper correction; all six static icons have owner approval. Select an icon in the right sidebar and compare its 16/20/24/48px samples on light/dark surfaces with ink/indigo colors.
-
-Outline has Thin (1.25), Regular / default (1.70) and Bold (2.25), plus fine adjustment. Filled Folder uses the same control for its inner gap; the other filled studies use fixed solid geometry. X/Y are independent positive percentages with no upper or artboard cap. Preview zoom runs from 4× to 24× (default 14×) without changing artwork or actual-size samples. Its viewport scrolls for close inspection. Rotate with a degree field or ±15° steps; the canvas, samples and comparisons stay in sync. Negative spacing reports overflow rather than preventing it. “Match Y to left spacing” is an optional one-time action at 0°/180°, not an axis lock. Per-icon drafts last for the page session. See [lab review notes](design/LAB.md).
-
-![Icon lab desktop preview](design/previews/lab-desktop.png)
+The homepage imports at most twelve approved icons for its featured collection and 128-card hero grid. The grid mixes supported Outline/Filled styles and pauses for interaction or reduced motion. The header contains the brand, theme control and GitHub link. The public gallery renders up to 48 icons per page, with category and search filters applied before pagination. Gallery components are still included in the gallery route bundle; pagination bounds rendered SVGs, while per-icon package imports remain independently tree-shakable.

@@ -1,0 +1,163 @@
+:root {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --radius-card: 24px;
+  --radius-card-large: 32px;
+  --radius-card-small: 20px;
+  --radius-control: 12px;
+  /* Tailwind CSS Amber 500: https://tailwindcss.com/docs/colors */
+  --color-amber-500: oklch(76.9% 0.188 70.08);
+  --accent-foreground: #18181b;
+}
+
+:root {
+  --selection-bg: #18181b;
+  --selection-fg: #ffffff;
+  --grid-line: #e8e8e8;
+  --page: #ffffff;
+  --surface: #ffffff;
+  --surface-subtle: #f7f7f7;
+  --text: #18181b;
+  --text-secondary: #52525b;
+  --muted: #71717a;
+  --faint: #858591;
+  --border: #e8e8f1;
+  --border-strong: #c7c7d7;
+  --edge-highlight: #ffffff;
+  --accent-text: color-mix(in oklab, var(--color-amber-500) 75%, black);
+  --syntax-tag: #4338ca;
+  --syntax-attribute: #1d4ed8;
+  --syntax-string: #047857;
+  --syntax-keyword: #7c3aed;
+  --syntax-number: #b45309;
+}
+:root[data-theme='dark'] {
+  --selection-bg: #ffffff;
+  --selection-fg: #111111;
+  --grid-line: #333333;
+  --page: #101010;
+  --surface: #191919;
+  --surface-subtle: #222222;
+  --text: #f4f4f5;
+  --text-secondary: #dddddd;
+  --muted: #b0b0b0;
+  --faint: #a0a0a0;
+  --border: #353535;
+  --border-strong: #525252;
+  --edge-highlight: #ffffff0d;
+  --accent-text: var(--color-amber-500);
+  --syntax-tag: #c7d2fe;
+  --syntax-attribute: #93c5fd;
+  --syntax-string: #6ee7b7;
+  --syntax-keyword: #c4b5fd;
+  --syntax-number: #fbbf24;
+}
+html[data-theme='dark'] .hero-emphasis {
+  color: var(--color-amber-500);
+}
+html[data-theme='dark'] .feature-card :is(.code-card-window, .code-card-window code) {
+  color: #e4e4ef;
+}
+html[data-theme='dark'] .icon-drawer .drawer-preview {
+  background-color: var(--surface-subtle);
+}
+html[data-theme='dark'] :is(.drawer-preview, .study-grid) {
+  background-image:
+    linear-gradient(#74748a26 1px, transparent 1px),
+    linear-gradient(90deg, #74748a26 1px, transparent 1px);
+}
+/* Center-circle palette reveal, following witnd. Unsupported browsers swap directly. */
+html[data-theme-reveal] *,
+html[data-theme-reveal] *::before,
+html[data-theme-reveal] *::after {
+  transition: none !important;
+}
+html[data-theme-reveal]::view-transition,
+html[data-theme-reveal]::view-transition-group(*),
+html[data-theme-reveal]::view-transition-image-pair(*),
+html[data-theme-reveal]::view-transition-old(*),
+html[data-theme-reveal]::view-transition-new(*) {
+  pointer-events: none;
+}
+html[data-theme-reveal]::view-transition-group(root),
+html[data-theme-reveal]::view-transition-old(root),
+html[data-theme-reveal]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+html[data-theme-reveal]::view-transition-old(root) {
+  z-index: 1;
+}
+html[data-theme-reveal]::view-transition-new(root) {
+  z-index: 2;
+}
+html[data-theme-reveal='expand']::view-transition-new(root) {
+  animation: theme-circle-expand var(--theme-reveal-duration, 420ms) cubic-bezier(0.37, 0, 0.63, 1)
+    both;
+}
+html[data-theme-reveal='contract']::view-transition-old(root) {
+  z-index: 2;
+  animation: theme-circle-contract var(--theme-reveal-duration, 420ms)
+    cubic-bezier(0.37, 0, 0.63, 1) both;
+}
+html[data-theme-reveal='contract']::view-transition-new(root) {
+  z-index: 1;
+  clip-path: none;
+}
+@keyframes theme-circle-expand {
+  from {
+    clip-path: circle(0px);
+  }
+  to {
+    clip-path: circle(var(--theme-reveal-radius));
+  }
+}
+@keyframes theme-circle-contract {
+  from {
+    clip-path: circle(var(--theme-reveal-radius));
+  }
+  to {
+    clip-path: circle(0px);
+  }
+}
+html[data-theme-reveal] .theme-menu {
+  visibility: hidden;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme-reveal]::view-transition-old(root),
+  html[data-theme-reveal]::view-transition-new(root) {
+    animation: none;
+  }
+}
+
+/* Keep server-rendered default icons visible before hydration; explicit colors stay untouched. */
+html[data-theme='dark'] .icon-browser:not(.custom-color) svg[stroke='#27272a'] {
+  stroke: #f4f4f5;
+}
+html[data-theme='dark'] .icon-browser:not(.custom-color) svg[fill='#27272a'] {
+  fill: #f4f4f5;
+}
+
+html[data-theme='dark'] .brand-symbol {
+  background: #f4f4f5;
+}
+html[data-theme='dark'] .brand-symbol span {
+  border-color: #18181b;
+}
+
+/* Entry only: completed animations release their transform so sticky controls stay native. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-appear {
+    animation: page-appear var(--appear-duration, 280ms) var(--ease-out) var(--appear-delay, 0ms)
+      backwards;
+  }
+}
+@keyframes page-appear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

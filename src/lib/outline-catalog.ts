@@ -1,0 +1,303 @@
+// Generated from the pinned Svelte package catalogs. Do not edit.
+import type { Component } from 'svelte';
+import type { IconProps } from '@squircle-icons/svelte';
+import ArrowLeft from '@squircle-icons/svelte/arrow-left';
+import ArrowRight from '@squircle-icons/svelte/arrow-right';
+import Bell from '@squircle-icons/svelte/bell';
+import Camera from '@squircle-icons/svelte/camera';
+import Check from '@squircle-icons/svelte/check';
+import ChevronDown from '@squircle-icons/svelte/chevron-down';
+import ChevronUp from '@squircle-icons/svelte/chevron-up';
+import Copy from '@squircle-icons/svelte/copy';
+import Download from '@squircle-icons/svelte/download';
+import Folder from '@squircle-icons/svelte/folder';
+import Heart from '@squircle-icons/svelte/heart';
+import Menu from '@squircle-icons/svelte/menu';
+
+export const catalog = [
+  {
+    ...{
+      name: 'arrow-left',
+      description: 'A left-facing navigation arrow with a straight shaft and open chevron head.',
+      tags: ['back', 'previous', 'navigation'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'Straight centerlines keep the symbol readable without an enclosing frame. Centerline bounds x=4..20 and y=6..18 give balanced opposite visible margins of 3.15 horizontally and 5.15 vertically. The arrow pair is mirrored about x=12. Native X/Y=100%, rotation=0 and Regular 1.70 are the reference. Owner rejected the radius-1.50 curved-head experiment on2026-10-27. Return to the original straight-arm V head with round .85 caps and round stroke joins at Regular1.70. Do not reintroduce a broad centerline fillet. Owner requested a solid arrowhead for every Filled arrow on2026-10-27. Outline retains the open straight-arm V. Filled closes that same head into a solid triangular body, including the Regular1.70 round exterior at its three corners; shaft and tray geometry are retained. Corresponding tip, arm endpoints, native outer bounds and Regular1.70 weight remain aligned. This is a semantic solid-head exception to reproducing the open Outline interior. Owner approved this current pair on2026-10-27.',
+      filledTreatment: 'solid-head',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved both current styles: open straight-arm V head in Outline and solid triangular head in Filled, with aligned tips/endpoints, original shafts/trays and Regular1.70 reference.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: ArrowLeft as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'arrow-right',
+      description: 'A right-facing navigation arrow with a straight shaft and open chevron head.',
+      tags: ['forward', 'next', 'navigation'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'Straight centerlines keep the symbol readable without an enclosing frame. Centerline bounds x=4..20 and y=6..18 give balanced opposite visible margins of 3.15 horizontally and 5.15 vertically. The arrow pair is mirrored about x=12. Native X/Y=100%, rotation=0 and Regular 1.70 are the reference. Owner rejected the radius-1.50 curved-head experiment on2026-10-27. Return to the original straight-arm V head with round .85 caps and round stroke joins at Regular1.70. Do not reintroduce a broad centerline fillet. Owner requested a solid arrowhead for every Filled arrow on2026-10-27. Outline retains the open straight-arm V. Filled closes that same head into a solid triangular body, including the Regular1.70 round exterior at its three corners; shaft and tray geometry are retained. Corresponding tip, arm endpoints, native outer bounds and Regular1.70 weight remain aligned. This is a semantic solid-head exception to reproducing the open Outline interior. Owner approved this current pair on2026-10-27.',
+      filledTreatment: 'solid-head',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved both current styles: open straight-arm V head in Outline and solid triangular head in Filled, with aligned tips/endpoints, original shafts/trays and Regular1.70 reference.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: ArrowRight as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'bell',
+      description: 'A gently squared bell with a separate hanging clapper.',
+      tags: ['notification', 'alert'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'The integrated top hanger is shortened by 0.5 unit (from 2.3 to 1.8 units above its shoulder junction) so it reads as a compact nub. The full drawing is then translated upward by 0.25 unit to keep opposite vertical margins balanced: centerline bounds y=2.75..21.25, visible Regular bounds y=1.9..22.1. Straight walls, shoulders, lower lip and clapper proportions are retained. No doubled seams. Owner-approved source; Outline geometry retained through the Filled clapper correction.',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-26',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7 },
+        note: 'Owner approved Bell after the solid Filled clapper correction. Both styles reviewed at source proportions and Regular 1.70; the Filled clapper is a solid part with no U-shaped recess.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: Bell as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'camera',
+      description: 'A compact camera with a continuous curved body and circular lens.',
+      tags: ['photo', 'image'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'Owner-requested rounder unboxed camera with the left/right primary edge pair at exactly 2 native units. Both style exteriors span x=2..22 and y=3.49175127..20.50824873, centered at 12,12. The natural horizontal body proportions are retained (20 by 17.01649746); the shorter vertical axis is not stretched to force 2px top/bottom margins. Outline uses circular tangent fillets and unchanged Regular 1.70 stroke. Filled exterior is the exact 0.85 outward offset of the same lines and arcs, increasing convex radii and reducing concave radii while keeping arc centers fixed. No enclosing box is added. Camera body corner radii are 2.75 at shoulders and 3.25 at the base; the raised housing has softened .8/1.05 transitions. The owner then requested lowering the raised housing by .75 unit relative to the body. The complete drawing is recentered upward by .375 unit, including lens and indicator; circle radii remain unchanged; Filled counters remain their established fixed geometry. Native X/Y=100%, rotation=0. Owner-approved source.',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved both Outline and Filled after rounder corners, exact 2px left/right primary margins, and the .75-unit lower raised housing. Reviewed at native proportions and Regular 1.70.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: Camera as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'check',
+      description: 'A clear check mark with a compact lead-in and a longer rising arm.',
+      tags: ['tick', 'done', 'confirm', 'success'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'Owner requested boxed Filled Check on2026-10-27, using the accepted Plus/X family. The solid frame has bounds2..22 and radius4. Outline is exactly the negative-space mark in Filled at Regular1.70, with round .85 caps and join. Shared centerlines are M4.85 12.55 L9.25 16.95 L19.15 7.05; both arms retain45-degree slopes and their unequal lengths. Native shared visible bounds are x4..20/y6.2..17.8. The horizontal primary inner pair has exactly2px clearance; vertical inner clearance is4.2px to preserve the check proportions. The box has2px artboard margins all around. Owner approved this current pair on2026-10-27.',
+      filledTreatment: 'boxed-cutout',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved current Check Outline and boxed Filled: radius-4 frame at2..22 and identical shared Regular1.70 check mark.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: Check as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'chevron-down',
+      description: 'A balanced downward chevron with straight arms and a rounded vertex.',
+      tags: ['down', 'expand', 'dropdown', 'arrow', 'caret'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'Mirrored 45-degree arms meet at 12,15.25, with endpoints at 5.5,8.75 and 18.5,8.75. A single continuous centerline avoids doubled joins. Native bounds are centered at 12,12. Regular visible margins are 4.65 horizontally and 7.9 vertically. Rounded caps and the rounded lower vertex use the shared 1.70 stroke. Native X/Y=100%, rotation=0 and Regular 1.70 are the reference. Owner rejected the radius-1.50 curved-head experiment on2026-10-27. Return to the original straight-arm V head with round .85 caps and round stroke joins at Regular1.70. Do not reintroduce a broad centerline fillet. Owner requested a solid arrowhead for every Filled arrow on2026-10-27. Outline retains the open straight-arm V. Filled closes that same head into a solid triangular body, including the Regular1.70 round exterior at its three corners; shaft and tray geometry are retained. Corresponding tip, arm endpoints, native outer bounds and Regular1.70 weight remain aligned. This is a semantic solid-head exception to reproducing the open Outline interior. Owner approved this current pair on2026-10-27.',
+      filledTreatment: 'solid-head',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved both current styles: open straight-arm V head in Outline and solid triangular head in Filled, with aligned tips/endpoints, original shafts/trays and Regular1.70 reference.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: ChevronDown as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'chevron-up',
+      description: 'A balanced upward chevron with straight arms and a rounded vertex.',
+      tags: ['up', 'collapse', 'arrow', 'caret'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'This is the exact vertical reflection of Chevron Down about y=12. Mirrored 45-degree arms meet at 12,8.75, with endpoints at 5.5,15.25 and 18.5,15.25. Native bounds are centered at 12,12. Regular visible margins are 4.65 horizontally and 7.9 vertically. One continuous centerline avoids doubled joins. Native X/Y=100%, rotation=0 and Regular 1.70 are the reference. Owner rejected the radius-1.50 curved-head experiment on2026-10-27. Return to the original straight-arm V head with round .85 caps and round stroke joins at Regular1.70. Do not reintroduce a broad centerline fillet. Owner requested a solid arrowhead for every Filled arrow on2026-10-27. Outline retains the open straight-arm V. Filled closes that same head into a solid triangular body, including the Regular1.70 round exterior at its three corners; shaft and tray geometry are retained. Corresponding tip, arm endpoints, native outer bounds and Regular1.70 weight remain aligned. This is a semantic solid-head exception to reproducing the open Outline interior. Owner approved this current pair on2026-10-27.',
+      filledTreatment: 'solid-head',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved both current styles: open straight-arm V head in Outline and solid triangular head in Filled, with aligned tips/endpoints, original shafts/trays and Regular1.70 reference.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: ChevronUp as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'copy',
+      description: 'Two overlapping rounded pages with a distinct foreground sheet.',
+      tags: ['duplicate', 'clipboard', 'document'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'Owner-requested greater separation and the standard Camera/Folder main-body corner roundness. Both page centerlines use radius 3.25 with unchanged Regular 1.70 stroke and .85 round caps. Nominal rear page centerline bounds are 2.85..15.45; front page centerline bounds are 8.55..21.15 on both axes. The offset is 5.70, producing a 4.00-unit clear straight gap between the exposed parallel borders (previously 2.80). Combined visible bounds are 2..22 on both axes, with balanced 2px artboard margins. The owner requested breaks at both rear/front junctions. The rear path now starts at 5.85 15.44037035 and ends at 15.44037035 5.85, trimmed along the existing corner arcs so each radius-.85 end cap stops exactly 1 unit before the visible foreground border. These two endpoint clearances are separate from the 4-unit parallel-border gap. The front page stays unchanged. Filled uses the exact Outline exterior: outer corner radius 4.10, rear-band inner radius 2.40 and .85 end caps. Its front page is solid, with no added enclosing box or artificial hole. Position and visible exterior match between styles at native X/Y=100%, rotation=0 and Regular 1.70. Both styles were owner-approved on 2026-10-27.',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved both Outline and Filled Copy with standard Camera/Folder roundness, 4px exposed page spacing, 1px breaks at both rear junctions and 2px outer margins.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: Copy as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'download',
+      description: 'A downward arrow meeting an open receiving tray.',
+      tags: ['save', 'receive', 'file'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'The arrow is centered at x=12 above a straight-sided U tray. The tray has a horizontal base and open top, preserving the recognizable receiving/sending object instead of a surrounding frame. Total centerline bounds x=4..20/y=3.5..20.5 balance visible padding 3.15 horizontally and 2.65 vertically. The 1.70 stroke supplies consistent rounded tray joints and free ends. Native X/Y=100%, rotation=0 and Regular 1.70 are the reference. Owner rejected the radius-1.50 curved-head experiment on2026-10-27. Return to the original straight-arm V head with round .85 caps and round stroke joins at Regular1.70. Do not reintroduce a broad centerline fillet. Owner requested a solid arrowhead for every Filled arrow on2026-10-27. Outline retains the open straight-arm V. Filled closes that same head into a solid triangular body, including the Regular1.70 round exterior at its three corners; shaft geometry is retained; the tray follows the standard roundness below. Corresponding tip, arm endpoints, native outer bounds and Regular1.70 weight remain aligned. This is a semantic solid-head exception to reproducing the open Outline interior. The owner subsequently approved both transfer styles on2026-10-27. Owner requested the Camera/Folder standard roundness for both transfer trays on2026-10-27. The tray now uses tangent radius3.25 centerline base corners, with vertical sides x4/20, corner centers7.25/16.75 at y17.25, and bottom y20.5. Both open ends remain at y16. Filled is the exact Regular1.70 stroke band: outer radius4.10, inner radius2.40 and free caps .85. Tray visible bounds x3.15..20.85/y15.15..21.35 and complete icon bounds x3.15..20.85/y2.65..21.35 are retained. The open Outline V and solid Filled arrowhead remain unchanged. Both styles were owner-approved on2026-10-27.',
+      filledTreatment: 'solid-head',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner explicitly approved Download and Upload Outline/Filled on2026-10-27 with the current standard radius3.25 centerline tray corners, aligned Filled exterior and accepted arrowheads. Native X/Y100%, Regular1.70, rotation0; source geometry is unchanged by this approval.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: Download as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'folder',
+      description:
+        'A horizontal rounded folder with a distinct tab and a straight movable front-panel edge.',
+      tags: ['files', 'directory'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'Owner-requested rounder unboxed folder with the left/right primary edge pair at exactly 2 native units. Both style exteriors span x=2..22 and y=3.31979695..20.68020305, centered at 12,12. Visible aspect ratio is retained from the established Outline family (20 by 17.36040609); the shorter vertical axis is not stretched to force 2px top/bottom margins. Outline uses circular tangent fillets and unchanged Regular 1.70 stroke. Filled exterior is the exact 0.85 outward offset of the same lines and arcs, increasing convex radii and reducing concave radii while keeping arc centers fixed. No enclosing box is added. Folder body corner radii increase to 2.8/3.0 at the top and 3.25 at the base. The tab stays recognizable and its front-panel divider remains straight at y=10.9. The Filled divider gap remains strokeWidth-controlled, independent of the fixed exterior. Native X/Y=100%, rotation=0. Owner-approved source.',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved both Outline and Filled after rounder body corners, exact 2px left/right primary margins, retained horizontal proportions and matching unboxed outer contours. Reviewed at native proportions and Regular 1.70.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: 1.7,
+      reviewStatus: 'approved',
+    },
+    component: Folder as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'heart',
+      description: 'A balanced heart with full lobes and a softened lower point.',
+      tags: ['love', 'favorite'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'The lower silhouette is a slim V with only a slight outward convex bow. Mirrored quadratic flanks depart subtly from straight diagonals and meet a compact rounded tip. Tangents align through the side transitions and tip without inward inflections. The established upper lobes and notch are retained. Outline bounds x=3.25..20.75, y=4.1..19.9 remain centered. Owner-approved source.',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-26',
+        style: 'outline',
+        preview: { x: 95, y: 95, strokeWidth: 1.7 },
+        note: 'Owner approved Heart Outline and Filled after the head alignment and centered-grid review. The reviewed Lab preview used X/Y=95%; these local preview settings are recorded without changing the source geometry.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: Heart as Component<IconProps>,
+  },
+  {
+    ...{
+      name: 'menu',
+      description: 'Three straight menu bars with rounded ends.',
+      tags: ['navigation', 'list', 'hamburger'],
+      authorship: 'Original geometry constructed for this project; no third-party icon paths used.',
+      construction:
+        'Owner changed the Filled concept to Bold rather than a boxed cutout. Filled is fixed fill-only geometry matching the exact Outline centerlines rendered at Bold 2.25, with round cap radius 1.125. Outline retains default Regular 1.70 and radius-.85 caps. Both styles share centerlines and placement; weight is deliberately different. Centerlines are sized for exact 2px primary-pair margins at the Filled Bold reference. Regular Outline therefore has 2.275px on that same primary pair. No enclosing box or negative-space symbol is present. Native X/Y=100%, rotation=0. The owner approved both revised styles on 2026-10-27. Three straight equal centerlines x=3.125..20.875 at y=6,12,18. Filled visible bounds x=2..22/y=4.875..19.125; horizontal is the primary pair. Vertical margins preserve the natural bar spacing. Each bar is an analytical radius-1.125 capsule.',
+      filledTreatment: 'bold-stroke',
+      review: {
+        status: 'approved',
+        reviewedBy: 'palamto',
+        date: '2026-10-27',
+        style: 'outline',
+        preview: { x: 100, y: 100, strokeWidth: 1.7, rotation: 0 },
+        note: 'Owner approved the current unboxed Filled = Bold 2.25 treatment and corresponding Regular 1.70 Outline. Shared centerlines and native proportions are retained, with 2px Filled primary margins.',
+      },
+      styles: ['outline', 'filled'],
+      defaultStrokeWidth: 1.7,
+      filledDefaultStrokeWidth: null,
+      reviewStatus: 'approved',
+    },
+    component: Menu as Component<IconProps>,
+  },
+];
+export const strokeWeights = { thin: 1.25, regular: 1.7, bold: 2.25 };

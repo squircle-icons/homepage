@@ -1,72 +1,219 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
+  import Copy from '@squircle-icons/svelte/copy';
+  import Check from '@squircle-icons/svelte/check';
+  import CodeExample from '#lib/components/CodeExample.svelte';
+
+  const sections = [
+    { id: 'installation', label: 'Getting started' },
+    { id: 'static', label: 'Using icons' },
+    { id: 'props', label: 'Component props' },
+    { id: 'accessibility', label: 'Accessibility' },
+    { id: 'contributing', label: 'Contributing' },
+  ];
+  const scrollOffset = 108;
+  const commands = {
+    npm: 'npm install @squircle-icons/svelte@alpha',
+    pnpm: 'pnpm add @squircle-icons/svelte@alpha',
+  };
+  let manager = $state<'npm' | 'pnpm'>('npm');
+  let activeSection = $state('installation');
+  let toc = $state<HTMLElement>();
+  let highlight = $state({ left: 0, top: 0, width: 0, height: 0 });
+  let copyState = $state<'idle' | 'copying' | 'copied' | 'error'>('idle');
+  let copyOperation = 0;
+  const installCommand = $derived(commands[manager]);
+
+  function selectManager(value: 'npm' | 'pnpm') {
+    manager = value;
+    copyOperation++;
+    copyState = 'idle';
+  }
+  async function copyInstall() {
+    const operation = ++copyOperation;
+    copyState = 'copying';
+    try {
+      await navigator.clipboard.writeText(installCommand);
+      if (operation === copyOperation) copyState = 'copied';
+    } catch {
+      if (operation === copyOperation) copyState = 'error';
+    }
+  }
+  onMount(() => {
+    const elements = sections.map(({ id }) => document.getElementById(id)!);
+    let frame = 0;
+    let mounted = true;
+    const update = () => {
+      frame = 0;
+      const atBottom =
+        window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+      let current = sections[0].id;
+      for (const element of elements) {
+        if (element.getBoundingClientRect().top <= scrollOffset + 1) current = element.id;
+      }
+      activeSection = atBottom ? sections.at(-1)!.id : current;
+      const link = toc?.querySelector<HTMLAnchorElement>(`a[href="#${activeSection}"]`);
+      if (link)
+        highlight = {
+          left: link.offsetLeft,
+          top: link.offsetTop,
+          width: link.offsetWidth,
+          height: link.offsetHeight,
+        };
+    };
+    const schedule = () => {
+      if (mounted && !frame) frame = requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    const observer = new ResizeObserver(schedule);
+    observer.observe(document.querySelector('.docs-content')!);
+    void document.fonts.ready.then(schedule);
+    schedule();
+    return () => {
+      mounted = false;
+      copyOperation++;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+    };
+  });
+
+  const frameworks = [
+    { name: 'Svelte', available: true },
+    { name: 'React', available: false },
+    { name: 'Vue', available: false },
+    { name: 'Angular', available: false },
+  ];
+  const usageCode =
+    '<script lang="ts">\n  import Camera from \'@squircle-icons/svelte/camera\';\n<\/script>\n\n' +
+    '<!-- Size: 24px by default -->\n<Camera />\n<Camera size={32} />\n\n' +
+    '<!-- Style: outline by default -->\n<Camera style="outline" />\n<Camera style="filled" />\n\n' +
+    '<!-- Stroke: regular (1.70) by default -->\n<Camera strokeWidth="thin" />\n<Camera strokeWidth="regular" />\n<Camera strokeWidth="bold" />';
   const examples = [
-    'npm install @squircle-icons/svelte@alpha\n\n# Or with pnpm:\npnpm add @squircle-icons/svelte@alpha',
-    '<script lang="ts">\n  import Camera from \'@squircle-icons/svelte/camera\';\n<\/script>\n\n<Camera size={24} color="currentColor" strokeWidth={1.70} />\n<Camera size={20} label="Camera" />',
-    "<script lang=\"ts\">\n  import Folder from '@squircle-icons/svelte/animated/folder';\n  import Bell from '@squircle-icons/svelte/animated/bell';\n  let open = $state(false);\n  let bell: { play(): void; reset(): void };\n<\/script>\n\n<button onclick={() => open = !open} aria-expanded={open}>\n  <Folder {open} /> Files\n</button>\n<button onclick={() => bell.play()}>\n  <Bell bind:this={bell} /> Preview notification\n</button>",
     '<!-- The button already has a name; the icon is decorative. -->\n<button aria-label="Take a photo"><Camera /></button>\n\n<!-- The icon itself conveys meaning. -->\n<Camera label="Camera available" />',
-    '# Run in each repository:\npnpm verify\n\n# In svelte, after committing a core change:\npnpm sync:core ../core\n\n# In homepage, after committing an adapter change:\npnpm sync:svelte ../svelte',
   ];
 </script>
 
 <svelte:head><title>Documentation — Squircle Icons</title></svelte:head>
-<section class="page-heading">
-  <div class="eyebrow">The guide</div>
-  <h1>A thoughtful starting point.</h1>
-  <p>
-    Small components, explicit motion, and one source of truth. Everything you need to use the first
-    collection.
-  </p>
-</section>
-<div class="docs-layout">
-  <nav aria-label="Documentation sections">
-    <span class="mono">ON THIS PAGE</span><a href="#installation">Getting started</a><a
-      href="#static">Static icons</a
-    ><a href="#props">Component props</a><a href="#motion">Motion</a><a href="#accessibility"
-      >Accessibility</a
-    ><a href="#contributing">Contributing</a>
+<h1 class="sr-only">Documentation</h1>
+<div class="docs-layout" style:--docs-scroll-offset={`${scrollOffset}px`}>
+  <nav
+    aria-label="Documentation sections"
+    bind:this={toc}
+    class:has-highlight={highlight.height > 0}
+  >
+    <div
+      class="toc-highlight"
+      aria-hidden="true"
+      style:transform={`translate(${highlight.left}px, ${highlight.top}px)`}
+      style:width={`${highlight.width}px`}
+      style:height={`${highlight.height}px`}
+    ></div>
+    <span class="mono">ON THIS PAGE</span>
+    {#each sections as section}
+      <a
+        href={'#' + section.id}
+        aria-current={activeSection === section.id ? 'location' : undefined}
+        onclick={() => (activeSection = section.id)}>{section.label}</a
+      >
+    {/each}
   </nav>
   <div class="docs-content">
     <section id="installation">
-      <span class="section-number mono">01 / GETTING STARTED</span>
-      <h2>Install the Svelte alpha.</h2>
-      <p>
-        Install the alpha package in a Svelte 5.57.1+ application. Six Outline icons and five Filled
-        variants are included. The package requires Node.js 22.17+; the checked toolchain uses
-        Node.js 24.
+      <h2>Getting started</h2>
+      <div class="framework-choices" role="group" aria-label="Framework">
+        {#each frameworks as framework}
+          <button
+            aria-pressed={framework.available}
+            disabled={!framework.available}
+            title={framework.available ? 'Svelte documentation' : 'Coming soon'}
+            aria-label={framework.available ? framework.name : `${framework.name} — coming soon`}
+            >{framework.name}</button
+          >
+        {/each}
+      </div>
+      <p class="framework-status">
+        Svelte is available now. React, Vue and Angular are coming later.
       </p>
-      <pre><code>{examples[0]}</code></pre>
+      <h3 class="requirements-heading">Recommended</h3>
+      <ul class="requirements" aria-label="Recommended setup">
+        <li>Svelte 5.0.0+ (version 5)</li>
+        <li>Node.js 22+ (maintained LTS releases)</li>
+        <li>npm 10+</li>
+      </ul>
+      <p>Use a Node.js version that meets the requirements of your chosen npm release.</p>
+      <div class="install-command" role="group" aria-label="Install package">
+        <div class="install-toolbar">
+          <div
+            class="package-managers"
+            role="group"
+            aria-label="Package manager"
+            style:--manager-index={manager === 'pnpm' ? 1 : 0}
+          >
+            {#each ['npm', 'pnpm'] as const as value}
+              <button aria-pressed={manager === value} onclick={() => selectManager(value)}
+                >{value}</button
+              >
+            {/each}
+          </div>
+          <button
+            class="copy-button"
+            aria-label="Copy install command"
+            title={copyState === 'copied' ? 'Copied' : 'Copy install command'}
+            aria-busy={copyState === 'copying'}
+            disabled={copyState === 'copying'}
+            onclick={copyInstall}
+          >
+            {#if copyState === 'copied'}<Check size={18} />{:else}<Copy size={18} />{/if}
+          </button>
+        </div>
+        <pre><code>{installCommand}</code></pre>
+      </div>
+      <p class="sr-only" role="status">
+        {copyState === 'copied' ? `${manager} command copied.` : ''}
+      </p>
+      {#if copyState === 'error'}
+        <p class="copy-error" role="alert">
+          Could not copy. Select the command and copy it manually.
+        </p>
+      {/if}
       <p class="callout">
-        Alpha APIs and artwork may change before a stable release. Original artwork, motion recipes,
-        and code are licensed under MIT. Animated Folder/Bell exports remain experimental.
+        Alpha APIs and artwork may change before a stable release. Original artwork and code are
+        licensed under MIT.
       </p>
     </section>
     <section id="static">
-      <span class="section-number mono">02 / STATIC ICONS</span>
-      <h2>Import exactly what you use.</h2>
+      <h2>Using icons</h2>
       <p>
-        Use a direct path for each icon. It limits the build graph to that component; static icons
-        import no motion controller or recipes. Animated paths include only the selected icon and
-        the motion helpers it needs.
+        Import an icon in your <code>.svelte</code> file, then add it where you want it to appear.
       </p>
-      <pre><code>{examples[1]}</code></pre>
-      <p>
-        You can also use named static exports: <code
-          >import &#123; Camera &#125; from '@squircle-icons/svelte'</code
-        >. Unused icons are removed from the final production bundle, but a build tool may still
-        compile other icons before removing them. Prefer direct paths to reduce compilation work.
-        The selected native Svelte component still compiles as part of your application.
-      </p>
-      <p>
-        Five icons have a Filled entry point, such as <code
-          >import Camera from '@squircle-icons/svelte/filled/camera'</code
-        >. Search is Outline only by design. These are separate solid drawings. Only Filled Folder
-        uses <code>strokeWidth</code> to adjust its internal gap; the other Filled variants have fixed
-        geometry.
-      </p>
+      <CodeExample title="Example.svelte" code={usageCode} />
+      <ul class="usage-notes" aria-label="Usage notes">
+        <li>
+          <strong>Icon selection:</strong> Update the component name and import path for the icon you
+          want to use.
+        </li>
+        <li>
+          <strong>Default appearance:</strong> <code>&lt;Camera /&gt;</code> renders a 24px Outline icon
+          with a regular stroke. The icon inherits the surrounding text color.
+        </li>
+        <li>
+          <strong>Size:</strong> <code>size=&#123;32&#125;</code> sets both the width and height to 32px.
+        </li>
+        <li>
+          <strong>Filled style:</strong> Set <code>style="filled"</code> to use the solid variant. All
+          20 icons support both styles.
+        </li>
+        <li>
+          <strong>Accessibility:</strong> Use <code>label="Camera"</code> to provide an accessible name.
+          Omit the label when the icon is decorative or its button already has a name.
+        </li>
+      </ul>
     </section>
     <section id="props">
-      <span class="section-number mono">03 / THE API</span>
-      <h2>A few considered defaults.</h2>
+      <h2>Component props</h2>
       <div class="table-scroll">
         <table>
           <thead><tr><th>Prop</th><th>Default</th><th>Purpose</th></tr></thead><tbody
@@ -79,12 +226,16 @@
                 >Stroke color. Inherits text color by default.</td
               ></tr
             ><tr
-              ><td><code>strokeWidth</code></td><td><code>1.70</code></td><td
-                >Stroke width in the 24-unit drawing grid.</td
+              ><td><code>strokeWidth</code></td><td><code>regular</code></td><td
+                >Thin (1.25), regular (1.70), bold (2.25), or a custom number.</td
               ></tr
             ><tr
               ><td><code>label</code></td><td>Unset</td><td
                 >One accessible name for a meaningful icon.</td
+              ></tr
+            ><tr
+              ><td><code>style</code></td><td><code>outline</code></td><td
+                >Choose Outline or Filled where available.</td
               ></tr
             ><tr><td><code>class</code></td><td>Unset</td><td>Style the root SVG.</td></tr></tbody
           >
@@ -95,333 +246,405 @@
         or turn themselves into interactive controls.
       </p>
     </section>
-    <section id="motion">
-      <span class="section-number mono">04 / PURPOSEFUL MOTION</span>
-      <h2>State when it matters.<br />A gesture when it helps.</h2>
-      <p>
-        Animated icons have a separate entry point. Folder uses the controlled <code>open</code>
-        prop. Bell exposes <code>play()</code> and <code>reset()</code> through
-        <code>bind:this</code>. Folder also exposes <code>reset()</code>.
-      </p>
-      <pre><code>{examples[2]}</code></pre>
-      <div class="table-scroll">
-        <table>
-          <thead><tr><th>Behavior</th><th>Contract</th></tr></thead><tbody
-            ><tr
-              ><td>Initial render</td><td
-                >No autoplay. Folder renders its initial open/closed pose on the server.</td
-              ></tr
-            ><tr
-              ><td>Folder state change</td><td
-                >220 ms transition. An interrupted transition continues from the visible pose toward
-                the newest target.</td
-              ></tr
-            ><tr
-              ><td>Bell playback</td><td
-                >600 ms, once, ending at rest. Replaying cancels the old cycle and restarts from
-                rest.</td
-              ></tr
-            ><tr
-              ><td><code>hover=true</code></td><td
-                >Off by default. Folder previews open until pointer exit; <code>open=true</code> keeps
-                it open. Bell plays once per entry.</td
-              ></tr
-            ><tr
-              ><td><code>reset()</code></td><td
-                >Immediate. Folder clears hover and returns to the controlled state; bell returns to
-                rest. Does not mutate the parent prop.</td
-              ></tr
-            ><tr
-              ><td><code>reducedMotion</code></td><td
-                ><code>system</code> by default; <code>always</code> also available. Folder snaps to state;
-                bell stays at rest.</td
-              ></tr
-            ><tr
-              ><td>Unmount</td><td
-                >Animations are cancelled and preference listeners removed. Methods called before
-                mount or after teardown are harmless.</td
-              ></tr
-            ></tbody
-          >
-        </table>
-      </div>
-      <p>
-        Playback uses native Web Animations API transforms. Unsupported animation APIs settle
-        immediately at the correct state. There is no physics or path morphing engine.
-      </p>
-    </section>
     <section id="accessibility">
-      <span class="section-number mono">05 / ACCESSIBILITY</span>
-      <h2>Meaning belongs in context.</h2>
+      <h2>Accessibility</h2>
       <p>
         Icons without a <code>label</code> are decorative and hidden from assistive technology. A
         nonempty label adds <code>role="img"</code> and a single <code>aria-label</code>. We do not
         add a duplicate SVG title.
       </p>
-      <pre><code>{examples[3]}</code></pre>
+      <CodeExample title="Accessibility.svelte" showHeader={false} code={examples[0]} />
       <p>
         Icons never add tab stops. Use buttons or links for interaction, and provide text or
-        application status for meaningful notifications. A ringing animation alone must not carry
-        essential information.
+        application status for meaningful notifications.
       </p>
-      <p>
-        System reduced-motion changes are respected even during playback. No global DOM work occurs
-        on import, and the first six drawings require no DOM IDs.
-      </p>
+      <p>No global DOM work occurs on import, and icons require no DOM IDs.</p>
     </section>
     <section id="contributing">
-      <span class="section-number mono">06 / BUILDING TOGETHER</span>
-      <h2>One drawing. A shared vocabulary.</h2>
+      <h2>Contributing</h2>
       <p>
-        The core repository owns SVGs in <code>icons/</code> and motion recipes in
-        <code>motions/</code>. Recipes reference stable named parts. Generated components must not
-        be edited by hand.
+        This section is for contributors who want to report a bug, request an icon, or improve the
+        project. You do not need these guides to install or use the icons.
       </p>
-      <pre><code>{examples[4]}</code></pre>
-      <p>
-        The 24×24 grid, 1.70 stroke, optical padding, and curvature are proposals awaiting visual
-        review. Refer to CONTRIBUTING and the architecture notes for the relevant repository before
-        changing the data model or adapter.
-      </p>
-      <p class="callout">
-        Next decision: review the remaining Bell, Heart and Settings pairs in the Lab before adding
-        more icons or another framework. The final package name is still open; the project uses the
-        MIT license.
-      </p>
+      <p>Read the contribution guide for the area you want to work on:</p>
+      <ul class="usage-notes" aria-label="Contribution guides">
+        <li>
+          <a href="https://github.com/squircle-icons/core/blob/main/CONTRIBUTING.md">Icon artwork</a
+          >
+        </li>
+        <li>
+          <a href="https://github.com/squircle-icons/svelte/blob/main/CONTRIBUTING.md"
+            >Svelte components</a
+          >
+        </li>
+        <li>
+          <a href="https://github.com/squircle-icons/homepage/blob/main/CONTRIBUTING.md"
+            >Website and documentation</a
+          >
+        </li>
+      </ul>
     </section>
   </div>
 </div>
 
 <style>
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
   .docs-layout {
     display: grid;
     grid-template-columns: 210px minmax(0, 1fr);
     gap: 65px;
     align-items: start;
+    padding-top: 36px;
+    font-size: 14px;
+    animation: docs-enter 240ms ease-out;
   }
   .docs-layout > nav {
     display: flex;
     flex-direction: column;
-    gap: 13px;
     position: sticky;
-    top: 30px;
-    border-top: 1px solid #e4e4e7;
-    padding-top: 22px;
+    top: var(--docs-scroll-offset);
+    padding: 0;
+    gap: 5px;
   }
   .docs-layout > nav > span {
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    color: #a1a1aa;
-    margin-bottom: 10px;
+    font-size: 14px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    margin: 0 0 12px;
   }
   .docs-layout > nav > a {
-    font-size: 12px;
-    color: #71717a;
+    position: relative;
+    font-size: 14px;
+    color: var(--muted);
+    padding: 7px 14px;
+    border-radius: 8px;
+    transition:
+      background 150ms,
+      color 150ms;
   }
   .docs-layout > nav > a:hover {
-    color: #4f46e5;
+    color: var(--text);
+  }
+  .docs-layout > nav > a[aria-current='location'] {
+    background: color-mix(in srgb, var(--color-amber-500) 12%, var(--surface));
+    color: var(--accent-text);
+  }
+  .docs-layout > nav.has-highlight > a[aria-current='location'] {
+    background: transparent;
+  }
+  .toc-highlight {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: color-mix(in srgb, var(--color-amber-500) 12%, var(--surface));
+    border-radius: 8px;
+    pointer-events: none;
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      width 220ms ease,
+      height 220ms ease;
+  }
+  :global(html:has(.docs-layout)) {
+    scroll-behavior: smooth;
   }
   .docs-content {
     max-width: 760px;
+    min-width: 0;
   }
   .docs-content > section {
-    border-top: 1px solid #e4e4e7;
-    padding-top: 26px;
-    padding-bottom: 45px;
-    scroll-margin-top: 28px;
+    border-top: 1px solid var(--border);
+    padding-top: 29px;
+    padding-bottom: 47px;
+    scroll-margin-top: var(--docs-scroll-offset);
   }
-  .section-number {
-    font-size: 9px;
-    letter-spacing: 0.12em;
-    color: #a1a1aa;
-    display: block;
-    margin-bottom: 22px;
+  .docs-content > section:first-child {
+    border-top: 0;
   }
   .docs-content h2 {
-    font-size: 28px;
-    margin-bottom: 20px;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.5;
+    letter-spacing: 0;
+    margin-bottom: 18px;
+    animation: heading-enter 320ms cubic-bezier(0.22, 1, 0.36, 1);
   }
   .docs-content p {
-    font-size: 13px;
-    color: #71717a;
-    line-height: 1.9;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .requirements-heading {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 20px 0 8px;
+  }
+  .requirements,
+  .usage-notes {
+    margin: 12px 0 20px;
+    padding-left: 20px;
+    list-style: disc;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.8;
+  }
+  .requirements li + li,
+  .usage-notes li + li {
+    margin-top: 6px;
+  }
+  .usage-notes a {
+    color: var(--accent-text);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  #contributing .usage-notes li::marker {
+    color: var(--color-amber-500);
+  }
+  #contributing .usage-notes a {
+    font-weight: 500;
+    text-decoration: none;
+  }
+  #contributing .usage-notes a:hover {
+    color: var(--color-amber-500);
+  }
+  .usage-notes strong {
+    color: var(--text);
+    font-weight: 600;
   }
   .docs-content pre {
-    font-size: 11px;
+    font-size: 14px;
+    line-height: 1.7;
     margin: 22px 0;
+    padding: 24px;
+    border-radius: var(--radius-card);
+    background: var(--surface-subtle);
+    border-color: var(--border);
+    box-shadow: inset 0 1px var(--edge-highlight);
   }
-  .callout {
-    border-left: 2px solid #6366f1;
-    background: #eef2ff;
-    padding: 15px 18px;
-    border-radius: 0 8px 8px 0;
+  .docs-content code {
+    font-size: 14px;
+  }
+  .framework-choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 20px 0 12px;
+  }
+  .framework-choices button {
+    font-size: 14px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--muted);
+  }
+  .framework-choices button[aria-pressed='true'] {
+    color: var(--selection-fg);
+    border-color: var(--selection-bg);
+    background: var(--selection-bg);
+  }
+  .framework-choices button:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  .framework-status {
+    margin-bottom: 18px;
+  }
+  .install-command {
+    margin: 22px 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background: var(--surface-subtle);
+    overflow: hidden;
+  }
+  .install-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .package-managers {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 3px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface-subtle);
+  }
+  .package-managers::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    left: 3px;
+    width: calc((100% - 6px) / 2);
+    border-radius: 999px;
+    background: var(--selection-bg);
+    box-shadow: 0 1px 4px #18181b0a;
+    transform: translateX(calc(var(--manager-index) * 100%));
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .package-managers button {
+    position: relative;
+    min-width: 64px;
+    transition: color 150ms ease;
+  }
+  .package-managers button,
+  .copy-button {
+    padding: 6px 12px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .package-managers button[aria-pressed='true'] {
+    color: var(--selection-fg);
+  }
+  .copy-button {
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-color: var(--border);
+    background: var(--surface);
+    color: var(--text);
+  }
+  .copy-button:hover {
+    border-color: var(--border-strong);
+    color: var(--text);
+  }
+  .copy-button:disabled {
+    cursor: wait;
+    opacity: 0.6;
+  }
+  .install-command pre {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: transparent;
+  }
+  .install-command code {
+    user-select: all;
+  }
+  .docs-content .copy-error {
+    color: #b42318;
+  }
+  .docs-content .callout {
+    color: var(--accent-text);
+    border-left: 2px solid var(--color-amber-500);
+    background: color-mix(in srgb, var(--color-amber-500) 8%, var(--surface));
+    border-radius: 0 var(--radius-card-small) var(--radius-card-small) 0;
+    padding: 17px 20px;
   }
   .table-scroll {
     overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    margin: 22px 0;
+    background: var(--surface);
   }
   table {
     border-collapse: collapse;
     width: 100%;
-    font-size: 12px;
-    margin: 22px 0;
+    font-size: 14px;
+    margin: 0;
+  }
+  thead {
+    background: var(--surface-subtle);
   }
   th {
     text-align: left;
-    font-size: 10px;
-    letter-spacing: 0.04em;
-    color: #71717a;
-    font-weight: 500;
+    font-weight: 600;
   }
   th,
   td {
-    border-bottom: 1px solid #e4e4e7;
-    padding: 14px 12px 14px 0;
+    font-size: 14px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding: 16px;
     vertical-align: top;
   }
-  td {
-    color: #71717a;
-  }
   td:first-child {
-    color: #27272a;
+    color: var(--text-secondary);
     min-width: 125px;
   }
-  td:last-child {
-    padding-right: 0;
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  @keyframes docs-enter {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes heading-enter {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
   @media (max-width: 760px) {
     .docs-layout {
       grid-template-columns: 1fr;
       gap: 26px;
+      padding-top: 24px;
     }
     .docs-layout > nav {
       position: static;
       flex-direction: row;
       flex-wrap: wrap;
-      gap: 10px 20px;
-    }
-    .docs-layout > nav > span {
-      width: 100%;
-      margin: 0;
-    }
-    .docs-content h2 {
-      font-size: 25px;
-    }
-    .docs-content pre {
-      padding: 17px;
-      font-size: 10px;
-    }
-  }
-
-  .docs-layout {
-    grid-template-columns: 210px minmax(0, 1fr);
-    gap: 65px;
-  }
-  .docs-layout > nav {
-    top: 108px;
-    border: 1px solid #ebebf2;
-    background: linear-gradient(#fff, #fafafd);
-    border-radius: 16px;
-    padding: 20px 14px;
-    gap: 5px;
-    box-shadow: 0 3px 12px #312e8103;
-  }
-  .docs-layout > nav > span {
-    font-size: 8px;
-    letter-spacing: 0.1em;
-    color: #b1b1bf;
-    margin: 0 10px 10px;
-  }
-  .docs-layout > nav > a {
-    font-size: 11px;
-    color: #9191a2;
-    padding: 7px 10px;
-    border-radius: 7px;
-    transition:
-      background 0.15s,
-      color 0.15s;
-  }
-  .docs-layout > nav > a:hover {
-    background: #f0f1ff;
-    color: #6366f1;
-  }
-  .docs-content > section {
-    border-color: #ededf3;
-    padding-top: 29px;
-    padding-bottom: 47px;
-  }
-  .docs-content h2 {
-    font-size: 30px;
-    font-weight: 500;
-    line-height: 1.2;
-  }
-  .section-number {
-    font-size: 8px;
-    letter-spacing: 0.1em;
-    color: #b2b2c1;
-    margin-bottom: 23px;
-  }
-  .docs-content p {
-    font-size: 13px;
-    line-height: 1.9;
-    color: #9191a1;
-  }
-  .docs-content pre {
-    border-radius: 14px;
-    background: #f7f7fb;
-    border-color: #e8e8f1;
-    box-shadow: inset 0 1px #fff;
-    font-size: 11px;
-    padding: 24px;
-  }
-  .callout {
-    border-left-color: #a5b4fc;
-    background: #f6f6ff;
-    border-radius: 0 10px 10px 0;
-    color: #9191b3 !important;
-    padding: 17px 20px;
-  }
-  th {
-    font-size: 9px;
-    color: #a6a6b7;
-  }
-  td {
-    font-size: 11px;
-    color: #9696a8;
-  }
-  th,
-  td {
-    border-color: #eeeef4;
-    padding-block: 16px;
-  }
-  td:first-child {
-    color: #66667f;
-  }
-  @media (max-width: 760px) {
-    .docs-layout {
-      grid-template-columns: 1fr;
-      gap: 26px;
-    }
-    .docs-layout > nav {
-      position: static;
-      padding: 16px;
+      padding: 0;
       gap: 5px 10px;
     }
     .docs-layout > nav > span {
-      margin: 0 8px 5px;
+      width: 100%;
+      margin: 0 0 5px;
     }
     .docs-layout > nav > a {
-      font-size: 10px;
       padding: 5px 8px;
-    }
-    .docs-content h2 {
-      font-size: 26px;
-    }
-    .docs-content p {
-      font-size: 12px;
     }
     .docs-content pre {
       padding: 20px;
-      font-size: 10px;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .package-managers::before,
+    .package-managers button {
+      transition: none;
+    }
+    :global(html:has(.docs-layout)) {
+      scroll-behavior: auto;
+    }
+    .docs-layout,
+    .docs-content h2 {
+      animation: none;
+    }
+    .toc-highlight {
+      transition: none;
+    }
+    .docs-layout > nav > a {
+      transition: none;
     }
   }
 </style>
