@@ -18,6 +18,9 @@ test('landing, icons, and docs are usable on desktop and mobile', async ({ page 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(
     /Soft edges\.\s*Rounded character\./,
   );
+  await expect(page.locator('.drawing-notes')).toContainText(
+    `${packageCatalog.strokeWeights.regular.toFixed(2)}Default stroke`,
+  );
   const navigation = page.getByRole('navigation', { name: 'Main navigation' });
   await expect(navigation.getByRole('link', { name: 'Icons', exact: true })).toHaveAttribute(
     'href',

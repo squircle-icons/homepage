@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { strokeWeights } from '#lib/catalog-count.js';
   import HeroAura from '#lib/components/HeroAura.svelte';
   import HeroIconGrid from '#lib/components/HeroIconGrid.svelte';
   import Camera from '@squircle-icons/svelte/camera';
@@ -49,7 +50,7 @@
         </div>
         <div class="drawing-notes">
           <span><strong>24 × 24</strong>Drawing grid</span><span
-            ><strong>1.70</strong>Default stroke</span
+            ><strong>{strokeWeights.regular.toFixed(2)}</strong>Default stroke</span
           ><span><strong>Just enough.</strong>Room to breathe</span>
         </div>
       </div>
