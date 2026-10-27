@@ -3,6 +3,7 @@
   import Copy from '@squircle-icons/svelte/copy';
   import Check from '@squircle-icons/svelte/check';
   import CodeExample from '#lib/components/CodeExample.svelte';
+  import { iconCount, strokeWeights } from '#lib/catalog-count.js';
 
   const sections = [
     { id: 'installation', label: 'Getting started' },
@@ -90,7 +91,7 @@
     '<script lang="ts">\n  import Camera from \'@squircle-icons/svelte/camera\';\n<\/script>\n\n' +
     '<!-- Size: 24px by default -->\n<Camera />\n<Camera size={32} />\n\n' +
     '<!-- Style: outline by default -->\n<Camera style="outline" />\n<Camera style="filled" />\n\n' +
-    '<!-- Stroke: regular (1.70) by default -->\n<Camera strokeWidth="thin" />\n<Camera strokeWidth="regular" />\n<Camera strokeWidth="bold" />';
+    `<!-- Stroke: regular (${strokeWeights.regular.toFixed(2)}) by default -->\n<Camera strokeWidth="thin" />\n<Camera strokeWidth="regular" />\n<Camera strokeWidth="bold" />`;
   const examples = [
     '<!-- The button already has a name; the icon is decorative. -->\n<button aria-label="Take a photo"><Camera /></button>\n\n<!-- The icon itself conveys meaning. -->\n<Camera label="Camera available" />',
   ];
@@ -203,8 +204,9 @@
           <strong>Size:</strong> <code>size=&#123;32&#125;</code> sets both the width and height to 32px.
         </li>
         <li>
-          <strong>Filled style:</strong> Set <code>style="filled"</code> to use the solid variant. All
-          20 icons support both styles.
+          <strong>Filled style:</strong> Set <code>style="filled"</code> to use the solid variant.
+          All
+          {iconCount} icons support both styles.
         </li>
         <li>
           <strong>Accessibility:</strong> Use <code>label="Camera"</code> to provide an accessible name.
@@ -227,7 +229,9 @@
               ></tr
             ><tr
               ><td><code>strokeWidth</code></td><td><code>regular</code></td><td
-                >Thin (1.25), regular (1.70), bold (2.25), or a custom number.</td
+                >Thin ({strokeWeights.thin}), regular ({strokeWeights.regular.toFixed(2)}), bold ({strokeWeights.bold.toFixed(
+                  2,
+                )}), or a custom number.</td
               ></tr
             ><tr
               ><td><code>label</code></td><td>Unset</td><td

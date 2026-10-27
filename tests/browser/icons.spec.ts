@@ -81,6 +81,12 @@ test('icon style dropdown supports keyboard selection and Escape without closing
   await expect(page.getByLabel('Stroke width', { exact: true })).toBeEnabled();
 });
 
+async function chooseIcon(page: Page, name: string) {
+  const button = page.getByRole('button', { name: `View ${name} icon`, exact: true });
+  if (!(await button.isVisible())) await page.getByRole('searchbox').fill(name);
+  await button.click();
+}
+
 async function clipboardStub(page: Page, reject = false) {
   await page.addInitScript((reject) => {
     const writes: string[] = [];
@@ -191,7 +197,7 @@ test('floating card leaves the gallery interactive and controls sticky outside',
   await expect(dialog).not.toBeVisible();
   await expect(trigger).toBeFocused();
   await trigger.click();
-  await page.getByRole('button', { name: 'View heart icon' }).click();
+  await chooseIcon(page, 'heart');
   const heart = page.getByRole('dialog', { name: 'Heart', exact: true });
   await expect(heart).toBeVisible();
   await expect(sidebar.getByRole('combobox', { name: 'Icon style', exact: true })).toHaveText(
@@ -216,6 +222,7 @@ test('floating card leaves the gallery interactive and controls sticky outside',
   await page.evaluate(() => window.scrollTo(0, 180));
   await expect.poll(async () => (await toolbar.boundingBox())!.y).toBe(stickyTop);
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
+  await page.getByRole('searchbox').fill('heart');
   await heart.getByRole('button', { name: 'Close icon details' }).click();
   await expect(heart).not.toBeVisible();
   await expect(page.getByRole('button', { name: 'View heart icon' })).toBeFocused();
@@ -226,7 +233,7 @@ test('copy and download SVG preserve the selected package geometry, size, color 
 }) => {
   await clipboardStub(page);
   await page.goto('/icons');
-  await page.getByRole('button', { name: 'View camera icon' }).click();
+  await chooseIcon(page, 'camera');
   const dialog = page.getByRole('dialog', { name: 'Camera', exact: true });
   await page
     .getByRole('complementary', { name: 'Icon controls' })
@@ -332,7 +339,7 @@ test('filled exports and Svelte snippets match the chosen style, including Searc
   await dialog.getByRole('button', { name: 'Download SVG' }).click();
   expect((await downloading).suggestedFilename()).toBe('bell-filled.svg');
   await dialog.getByRole('button', { name: 'Close icon details' }).click();
-  await page.getByRole('button', { name: 'View search icon' }).click();
+  await chooseIcon(page, 'search');
   dialog = page.getByRole('dialog', { name: 'Search', exact: true });
   await expect(page.getByRole('combobox', { name: 'Icon style', exact: true })).toHaveText(
     'Filled',
@@ -381,7 +388,7 @@ test('drawer stays contained at smaller sizes and respects reduced motion', asyn
   for (const width of [390, 700, 1280]) {
     await page.setViewportSize({ width, height: 844 });
     await page.goto('/icons');
-    await page.getByRole('button', { name: 'View camera icon' }).click();
+    await chooseIcon(page, 'camera');
     const dialog = page.getByRole('dialog', { name: 'Camera', exact: true });
     await expect(dialog).toBeVisible();
     await expect(dialog).toHaveCSS('animation-name', 'none');
@@ -406,7 +413,7 @@ test('unknown or malformed deep links leave the gallery usable without browser e
     await page.goto('about:blank');
     await page.goto('/icons#' + hash);
     await expect(page.getByRole('dialog')).not.toBeVisible();
-    await page.getByRole('button', { name: 'View heart icon' }).click();
+    await chooseIcon(page, 'heart');
     await expect(page.getByRole('dialog', { name: 'Heart', exact: true })).toBeVisible();
   }
   expect(errors).toEqual([]);
@@ -415,7 +422,7 @@ test('unknown or malformed deep links leave the gallery usable without browser e
 test('stroke presets and copied code use the unified icon API', async ({ page }) => {
   await clipboardStub(page);
   await page.goto('/icons');
-  await page.getByRole('button', { name: 'View camera icon' }).click();
+  await chooseIcon(page, 'camera');
   const preview = page.getByTestId('drawer-preview').locator('svg');
   const presets = page.getByRole('combobox', { name: 'Icon style', exact: true });
   await expect(presets).toHaveText('Regular');
@@ -449,7 +456,7 @@ test('card exits downward, can reopen during dismissal, and settles immediately 
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/icons');
-  await page.getByRole('button', { name: 'View folder icon' }).click();
+  await chooseIcon(page, 'folder');
   let dialog = page.getByRole('dialog', { name: 'Folder', exact: true });
   await expect(dialog).toBeVisible();
   await dialog.getByRole('button', { name: 'Close icon details' }).click();
@@ -470,7 +477,7 @@ test('card exits downward, can reopen during dismissal, and settles immediately 
   expect(exit.frames.at(-1)!.transform).toContain('100%');
   await expect(dialog).toBeVisible();
   // Selecting another icon cancels the pending close and keeps the card usable.
-  await page.getByRole('button', { name: 'View camera icon' }).click();
+  await chooseIcon(page, 'camera');
   dialog = page.getByRole('dialog', { name: 'Camera', exact: true });
   await expect(dialog).toBeVisible();
   expect(
@@ -480,7 +487,7 @@ test('card exits downward, can reopen during dismissal, and settles immediately 
   ).toBe(false);
   await dialog.getByRole('button', { name: 'Close icon details' }).click();
   await expect(dialog).not.toBeVisible();
-  await page.getByRole('button', { name: 'View camera icon' }).click();
+  await chooseIcon(page, 'camera');
   await dialog.getByRole('button', { name: 'Close icon details' }).click();
   await page.evaluate(() =>
     document
@@ -491,7 +498,7 @@ test('card exits downward, can reopen during dismissal, and settles immediately 
   );
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(dialog).not.toBeVisible();
-  await page.getByRole('button', { name: 'View folder icon' }).click();
+  await chooseIcon(page, 'folder');
   dialog = page.getByRole('dialog', { name: 'Folder', exact: true });
   await dialog.getByRole('button', { name: 'Close icon details' }).click();
   await expect(dialog).not.toBeVisible();
@@ -505,14 +512,17 @@ test('sidebar changes the rendered gallery icons immediately, including size and
   const sidebar = page.getByRole('complementary', { name: 'Icon controls' });
   await sidebar.getByLabel('Export size').press('ArrowRight');
   await expect(sidebar.getByLabel('Export size')).toHaveValue('28');
-  const dimensions = await page.locator('.icon-button svg').evaluateAll((icons) =>
-    icons.map((icon) => {
-      const box = icon.getBoundingClientRect();
-      return { width: box.width, height: box.height };
-    }),
-  );
-  expect(dimensions.length).toBe(approved.length);
-  expect(dimensions.every((box) => box.width === 28 && box.height === 28)).toBe(true);
+  await expect(page.locator('.icon-button svg')).toHaveCount(Math.min(48, approved.length));
+  await expect
+    .poll(() =>
+      page.locator('.icon-button svg').evaluateAll((icons) =>
+        icons.every((icon) => {
+          const box = icon.getBoundingClientRect();
+          return box.width === 28 && box.height === 28;
+        }),
+      ),
+    )
+    .toBe(true);
   await sidebar.getByLabel('Hex color', { exact: true }).fill('#197065');
   await sidebar.getByLabel('Stroke width').fill('2.1');
   for (const icon of await page.locator('.icon-button svg').all()) {
@@ -526,14 +536,25 @@ test('sidebar changes the rendered gallery icons immediately, including size and
     String(metadata.strokeWeights.bold),
   );
   await chooseStyle(page, 'Filled');
-  for (const icon of approved) {
-    const svg = page.locator(`#${icon.name} svg`);
-    if (icon.styles.includes('filled')) await expect(svg).toHaveAttribute('fill', '#197065');
-    else {
-      await expect(svg).toHaveAttribute('fill', 'none');
-      await expect(svg).toHaveAttribute('stroke', '#197065');
+  const visited: string[] = [];
+  for (let offset = 0; offset < approved.length; offset += 48) {
+    const batch = approved.slice(offset, offset + 48);
+    await expect(page.locator('.icon-button')).toHaveCount(batch.length);
+    for (const icon of batch) {
+      const svg = page.locator(`#${icon.name} svg`);
+      if (icon.styles.includes('filled')) await expect(svg).toHaveAttribute('fill', '#197065');
+      else {
+        await expect(svg).toHaveAttribute('fill', 'none');
+        await expect(svg).toHaveAttribute('stroke', '#197065');
+      }
+      visited.push(icon.name);
     }
+    const next = page.getByRole('button', { name: 'Next', exact: true });
+    if (offset + 48 < approved.length) await next.click();
+    else if (approved.length > 48) await expect(next).toBeDisabled();
   }
+  expect(visited).toEqual(approved.map((icon: { name: string }) => icon.name));
+  await page.getByRole('searchbox').fill('camera');
   await chooseStyle(page, 'Outline');
   await expect(page.locator('#camera svg')).toHaveAttribute('fill', 'none');
   await expect(page.locator('#camera svg')).toHaveAttribute(
@@ -559,27 +580,16 @@ test('categories filter together with search, update the lower count, and suppor
     ['Nature', ['moon', 'sun']],
     [
       'Interface',
-      [
-        'arrow-left',
-        'arrow-right',
-        'bell',
-        'check',
-        'chevron-down',
-        'chevron-up',
-        'download',
-        'heart',
-        'menu',
-        'plus',
-        'search',
-        'settings',
-        'trash',
-        'upload',
-        'x',
-      ],
+      approved
+        .filter(
+          (icon: { name: string }) =>
+            !['camera', 'copy', 'folder', 'moon', 'sun'].includes(icon.name),
+        )
+        .map((icon: { name: string }) => icon.name),
     ],
   ] as const) {
     await tabs.getByRole('tab', { name: category, exact: true }).click();
-    await expect(page.locator('.icon-button .icon-name')).toHaveText([...names]);
+    await expect(page.locator('.icon-button .icon-name')).toHaveText([...names].slice(0, 48));
     await expect(count).toHaveText(`${names.length} ${names.length === 1 ? 'icon' : 'icons'}`);
     await expect(page.getByRole('tabpanel')).toHaveAccessibleName(category);
   }
@@ -598,7 +608,7 @@ test('categories filter together with search, update the lower count, and suppor
   await expect(tabs.getByRole('tab', { name: 'Nature', exact: true })).toBeFocused();
   await files.press('Home');
   await expect(tabs.getByRole('tab', { name: 'All', exact: true })).toBeFocused();
-  await expect(page.locator('.icon-button')).toHaveCount(approved.length);
+  await expect(page.locator('.icon-button')).toHaveCount(Math.min(48, approved.length));
 });
 
 test('gallery labels stay at the bottom and copy feedback floats outside the drawer', async ({

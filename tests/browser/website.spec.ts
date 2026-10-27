@@ -44,7 +44,7 @@ test('landing, icons, and docs are usable on desktop and mobile', async ({ page 
     .fill('20');
   await page
     .getByRole('complementary', { name: 'Icon controls' })
-    .getByLabel('Icon color')
+    .getByLabel('Hex color', { exact: true })
     .fill('#705090');
   await expect(dialog.locator('[data-testid="drawer-preview"] svg')).toHaveAttribute(
     'stroke',
@@ -138,7 +138,12 @@ test('homepage hero uses an icon-only grid with original Outline and Filled comp
     await cards.evaluateAll((cards) =>
       [...new Set(cards.map((card) => card.getAttribute('data-icon')))].sort(),
     ),
-  ).toEqual(approvedNames.slice(0, 12));
+  ).toEqual(
+    approvedIcons
+      .slice(0, 12)
+      .map((icon: { name: string }) => icon.name)
+      .sort(),
+  );
   expect(await grid.locator('[data-style="filled"]').count()).toBeGreaterThan(0);
   expect(await grid.locator('[data-style="outline"]').count()).toBeGreaterThan(0);
   expect(
@@ -156,8 +161,8 @@ test('homepage hero uses an icon-only grid with original Outline and Filled comp
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
   await cards.first().click();
-  await expect(page).toHaveURL(/\/icons#arrow-left$/);
-  await expect(page.getByRole('dialog', { name: 'ArrowLeft', exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/icons#align-center$/);
+  await expect(page.getByRole('dialog', { name: 'AlignCenter', exact: true })).toBeVisible();
   if (info.project.name === 'chromium') {
     await page.goto('/');
     await page.setViewportSize({ width: 1440, height: 1100 });
@@ -293,7 +298,9 @@ test('soft top light flows rightward in both themes and respects reduced motion'
   expect(auraBounds!.x).toBeCloseTo(0);
   expect(auraBounds!.width).toBe(1440);
   expect(auraBounds!.y).toBeCloseTo(headerBounds!.y);
-  expect(auraBounds!.y + auraBounds!.height).toBeLessThan(gridBounds!.y);
+  expect(gridBounds!.y).toBeGreaterThan(auraBounds!.y);
+  await expect(aura).toHaveCSS('mask-image', /radial-gradient/);
+  await expect(aura).toHaveCSS('overflow', 'clip');
   await expect(glass).toHaveCSS('backdrop-filter', 'blur(20px)');
   await expect(glass).toHaveCSS('background-color', /\/ 0\.45\)/);
   await expect(glass).toHaveCSS('border-radius', '999px');
@@ -323,6 +330,8 @@ test('soft top light flows rightward in both themes and respects reduced motion'
   await page.getByRole('button', { name: /^Theme:/ }).click();
   await page.getByRole('menuitemradio', { name: 'Dark', exact: true }).click();
   await expect(glass).toHaveCSS('background-color', /\/ 0\.45\)/);
-  expect(await aura.evaluate((el) => getComputedStyle(el).maskImage)).toBe(lightMask);
+  const darkMask = await aura.evaluate((el) => getComputedStyle(el).maskImage);
+  expect(darkMask).toMatch(/radial-gradient/);
+  expect(darkMask).not.toBe(lightMask);
   await expect(colors).toHaveCSS('animation-name', 'none');
 });

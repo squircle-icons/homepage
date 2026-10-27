@@ -17,15 +17,14 @@ immediately. Animations and preference listeners are cleaned up on teardown.
 
 Style, export size, stroke/gap and color controls live in a separate right sidebar,
 which is 300px wide on desktop and sticks below the site header while scrolling. The floating drawer uses the same column width so it remains aligned with the gallery. Export size uses a 16–64px
-slider in 4px steps. Style and stroke presets use rounded pill controls with a
-220ms sliding selection background; reduced motion disables those transitions. Text throughout this gallery,
+slider in 4px steps. A keyboard-accessible style dropdown combines Thin/Regular/Bold stroke presets and Filled, with a Custom option for fine adjustments. Text throughout this gallery,
 its sidebar and export card uses 14px. Header navigation and GitHub are 14px; the shared brand wordmark is 20px on every public route. Use 14px as the default for future
 interface text unless the user specifies another size. Gallery icons start at 24px and follow the sidebar size, stroke and color controls.
 The primary website accent is Tailwind Amber 500, defined once
 as `--color-amber-500` in `src/lib/theme.css` and shared by all routes.
 
 The drawer supports Outline/Filled where the package catalog provides both styles.
-Search remains outline only. Export size, color and applicable stroke/gap controls
+All current released icons support both styles. Export size, color and applicable stroke/gap controls
 affect both the exported artwork and the actual icon components in the gallery.
 Filled selection applies to supported icons; outline-only icons retain their outline. The preview is
 a square that matches the combined height of the action buttons and code block
@@ -35,7 +34,7 @@ omitted; copy/download feedback appears only after an action.
 - **Download SVG** creates a local `.svg` file from the rendered package component.
 - **Copy SVG** copies the same serialized SVG. Hydration comments are removed and
   the selected output dimensions and accessible name are included.
-- **Copy for Svelte** copies a per-icon npm import and usage example, including the
+- **Copy Svelte code** copies the selected component usage, including the
   selected style and presentation props. It requires `@squircle-icons/svelte` in the
   consuming project.
 
@@ -49,14 +48,13 @@ run only after a user action in the browser.
 
 Run `pnpm generate:check`, `pnpm dependency:check`, `pnpm check`, `pnpm test:unit`,
 `pnpm build`, then `pnpm test`.
-The alpha.1 update passed all 90 browser checks across Chromium, Firefox and
-WebKit, including gallery, landing, and docs. Six unit tests also passed. It covers geometry and presentation preservation in SVG exports, downloads,
+The browser suite covers geometry and presentation preservation in SVG exports, downloads,
 Svelte snippets, clipboard denial, search, style availability, focus restoration,
 nonmodal interaction, sticky controls, 14px text, dismissal, deep links, reduced
 motion and viewport containment. Clipboard tests use an isolated browser stub and do not overwrite the user's clipboard.
 
-The website installs the exact published npm package `@squircle-icons/svelte@0.1.0-alpha.1`.
-Its published catalog contains eight approved icons. Changes remain local while
+The website installs the exact published npm package `@squircle-icons/svelte@0.1.0-alpha.4`.
+Its published catalog contains 121 approved static icons. Changes remain local while
 other package work is in progress in the shared checkout.
 
 The search field is fully rounded and uses the surface color (white in Light). Category tabs share a padded, rounded secondary background; the selected tab retains the neutral black/white treatment.

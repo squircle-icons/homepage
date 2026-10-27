@@ -20,7 +20,15 @@ const pascal = (name: string) =>
     .map((part) => part[0].toUpperCase() + part.slice(1))
     .join('');
 for (const mode of ['outline', 'public'] as const) {
-  const icons = selectCatalog(sourceIcons, mode);
+  const icons = selectCatalog(sourceIcons, mode).map(
+    ({ name, description, tags, styles, reviewStatus }) => ({
+      name,
+      description,
+      tags,
+      styles,
+      reviewStatus,
+    }),
+  );
   const packageName = '@squircle-icons/svelte';
   const destination = new URL(
     `../src/lib/${mode === 'outline' ? 'outline-catalog' : 'public-catalog'}.ts`,
@@ -53,9 +61,12 @@ for (const mode of ['outline', 'public'] as const) {
   }
 }
 const countDestination = new URL('../src/lib/catalog-count.ts', import.meta.url);
-const countContent =
+const countContent = await format(
   '// Generated from the pinned Svelte package catalogs. Do not edit.\n' +
-  `export const iconCount = ${selectCatalog(sourceIcons, 'public').length};\n`;
+    `export const iconCount = ${selectCatalog(sourceIcons, 'public').length};\n` +
+    `export const strokeWeights = ${JSON.stringify(packageCatalog.strokeWeights)};\n`,
+  { ...(await resolveConfig('.prettierrc.json')), filepath: fileURLToPath(countDestination) },
+);
 if (process.argv.includes('--check')) {
   if ((await readFile(countDestination, 'utf8')) !== countContent)
     throw new Error('Stale homepage count. Run pnpm generate.');

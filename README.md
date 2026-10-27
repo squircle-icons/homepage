@@ -6,7 +6,7 @@ The SvelteKit website for Squircle Icons: a white/black/Amber 500 landing page, 
 
 ![Landing preview](design/previews/landing-hero.png)
 
-This website installs `@squircle-icons/svelte@0.1.0-alpha.3` directly from npm with an exact version and lockfile integrity. Consumers can use `npm install @squircle-icons/svelte@0.1.0-alpha.3`. A checksum-verified copy of the published tarball and its source tag are recorded in `vendor/` and `dependency-lock.json` for provenance. The released catalog includes all 20 approved icons in both Outline and Filled styles.
+This website installs `@squircle-icons/svelte@0.1.0-alpha.4` directly from npm with an exact version and lockfile integrity. Consumers can use `npm install @squircle-icons/svelte@0.1.0-alpha.4`. A checksum-verified copy of the published tarball and its source tag are recorded in `vendor/` and `dependency-lock.json` for provenance. The released catalog includes all 121 approved static icons in Outline and Filled, including separately named Square/Circle variants.
 
 ## Develop
 
@@ -41,6 +41,6 @@ pnpm sync:svelte ../svelte
 
 The committed, clean Svelte checkout is checked and built, then packed into `vendor/`. The command records its commit and SHA-256 in a content-addressed artifact, refreshes the package/lockfile, and regenerates catalog imports. It rejects source changes during verification or packing. If installation, generation or provenance validation fails, it restores the previous files and dependency; if recovery also fails, it preserves a backup and reports its path. Commit the artifact, provenance, generated catalog, and lockfile together. CI only needs this repository and the public development dependencies; it does not need cross-repository tokens.
 
-The active provenance tarball is the exact published alpha.3 npm artifact. Source-sync development artifacts are separate from npm releases. Original artwork and code are licensed under [MIT](LICENSE); third-party assets retain their own licenses. No website deployment is performed by CI. See [migration provenance](MIGRATION.md), [design notes](design/DESIGN.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
+The active provenance tarball is the exact published alpha.4 npm artifact. Source-sync development artifacts are separate from npm releases. Original artwork and code are licensed under [MIT](LICENSE); third-party assets retain their own licenses. No website deployment is performed by CI. See [migration provenance](MIGRATION.md), [design notes](design/DESIGN.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 The homepage imports at most twelve approved icons for its featured collection and 128-card hero grid. The grid mixes supported Outline/Filled styles and pauses for interaction or reduced motion. The header contains the brand, theme control and GitHub link. The public gallery renders up to 48 icons per page, with category and search filters applied before pagination. Gallery components are still included in the gallery route bundle; pagination bounds rendered SVGs, while per-icon package imports remain independently tree-shakable.

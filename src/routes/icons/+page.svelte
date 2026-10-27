@@ -641,6 +641,7 @@
   .icon-button {
     position: relative;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-rows: minmax(0, 1fr) auto;
     justify-items: center;
     gap: 12px;
@@ -668,7 +669,10 @@
     min-height: 0;
   }
   .icon-button .icon-name {
-    white-space: nowrap;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
     font-size: 14px;
     line-height: 1.5;
     color: var(--muted);
@@ -1051,6 +1055,10 @@
     }
   }
   @media (max-width: 760px) {
+    .detail-controls {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
     .gallery-layout {
       padding-top: 24px;
     }

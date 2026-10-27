@@ -1,10 +1,10 @@
 {
   "repository": "https://github.com/squircle-icons/svelte",
-  "commit": "f9a277482b425b45151f8a5f10229f3026084f06",
-  "version": "0.1.0-alpha.3",
+  "commit": "9ebc27773f8ff294953771e1d6b8add51bf9e509",
+  "version": "0.1.0-alpha.4",
   "registry": "https://registry.npmjs.org",
-  "tarball": "https://registry.npmjs.org/@squircle-icons/svelte/-/svelte-0.1.0-alpha.3.tgz",
-  "integrity": "sha512-qKvkULjGfDOYVTG9pCvjrepLj7FA0VvEpPgBbF3lW3FReEH9FfKzOVnHyUQHhde8hRTKVnMEZAJJvz038s1Xbw==",
-  "artifact": "vendor/squircle-icons-svelte-0.1.0-alpha.3-a85fdf124d74.tgz",
-  "sha256": "a85fdf124d74fd7c83aa2965db4416a6ea1ec3dd135ab66c02450258391e89db"
+  "tarball": "https://registry.npmjs.org/@squircle-icons/svelte/-/svelte-0.1.0-alpha.4.tgz",
+  "integrity": "sha512-7PbdRaSUHiu8s0khCPNGCPv6eqoeyzSp+XdYK2swaGZnFH/psoCwN6bX+cU3crlco53GihbvH2gm9/6WEmAZiw==",
+  "artifact": "vendor/squircle-icons-svelte-0.1.0-alpha.4-5d85b4568641.tgz",
+  "sha256": "5d85b45686417a39358fd5379cbb37baec611c2370b7504e1d24e5e6cddacae9"
 }

@@ -40,7 +40,7 @@
     "vite": "8.3.5"
   },
   "dependencies": {
-    "@squircle-icons/svelte": "0.1.0-alpha.3"
+    "@squircle-icons/svelte": "0.1.0-alpha.4"
   },
   "imports": {
     "#lib/*": "./src/lib/*"

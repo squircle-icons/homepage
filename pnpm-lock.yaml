@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@squircle-icons/svelte':
-        specifier: 0.1.0-alpha.3
-        version: 0.1.0-alpha.3(svelte@5.57.2)
+        specifier: 0.1.0-alpha.4
+        version: 0.1.0-alpha.4(svelte@5.57.2)
     devDependencies:
       '@playwright/test':
         specifier: 1.64.1
@@ -342,8 +342,8 @@ packages:
   '@rolldown/pluginutils@1.0.1':
     resolution: {integrity: sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw==}
 
-  '@squircle-icons/svelte@0.1.0-alpha.3':
-    resolution: {integrity: sha512-qKvkULjGfDOYVTG9pCvjrepLj7FA0VvEpPgBbF3lW3FReEH9FfKzOVnHyUQHhde8hRTKVnMEZAJJvz038s1Xbw==}
+  '@squircle-icons/svelte@0.1.0-alpha.4':
+    resolution: {integrity: sha512-7PbdRaSUHiu8s0khCPNGCPv6eqoeyzSp+XdYK2swaGZnFH/psoCwN6bX+cU3crlco53GihbvH2gm9/6WEmAZiw==}
     engines: {node: '>=18.0.0', npm: '>=8.6.0'}
     peerDependencies:
       svelte: ^5.0.0
@@ -914,7 +914,7 @@ snapshots:
 
   '@rolldown/pluginutils@1.0.1': {}
 
-  '@squircle-icons/svelte@0.1.0-alpha.3(svelte@5.57.2)':
+  '@squircle-icons/svelte@0.1.0-alpha.4(svelte@5.57.2)':
     dependencies:
       svelte: 5.57.2
 
